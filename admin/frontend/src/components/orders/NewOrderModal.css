@@ -1,0 +1,119 @@
+/* ================================================================
+   NewOrderModal Styles
+   ================================================================ */
+
+.nom-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
+  z-index: 950;
+}
+
+.nom-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 460px;
+  max-width: 92vw;
+  background: var(--bg-surface);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  z-index: 951;
+  overflow: hidden;
+}
+
+.nom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.nom-header h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.nom-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.nom-close:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.nom-body {
+  padding: 30px 22px;
+}
+
+.nom-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.nom-placeholder-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  margin-bottom: 4px;
+}
+
+.nom-placeholder h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.nom-placeholder p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  max-width: 340px;
+}
+
+.nom-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 22px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-page);
+}
+
+.nom-cancel-btn {
+  padding: 9px 22px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-body);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.nom-cancel-btn:hover {
+  background: var(--bg-surface-2);
+}

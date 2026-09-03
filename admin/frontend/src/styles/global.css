@@ -1,0 +1,159 @@
+/* ================================================================
+   ANNPURNA Admin — Global Design System
+   Inherits brand tokens from the customer-facing site.
+   ================================================================ */
+
+:root {
+  /* ── Brand Colors ── */
+  --color-primary:       #B22222;
+  --color-primary-dark:  #8B1A1A;
+  --color-primary-light: rgba(178, 34, 34, 0.08);
+  --color-secondary:     #FFC300;
+  --color-secondary-light: rgba(255, 195, 0, 0.15);
+  --color-tertiary:      #2F8B57;
+  --color-tertiary-light: rgba(47, 139, 87, 0.10);
+  --color-neutral:       #5D4037;
+
+  /* ── Admin-specific palette ── */
+  --admin-sidebar-bg:     #2C1810;
+  --admin-sidebar-text:   #E8D5C4;
+  --admin-sidebar-active: #FFC300;
+  --admin-sidebar-hover:  rgba(255, 195, 0, 0.10);
+  --admin-sidebar-width:  260px;
+
+  /* ── Background Palette ── */
+  --bg-page:       #FFF8F4;
+  --bg-surface:    #FFFFFF;
+  --bg-surface-2:  #FEF4EC;
+  --bg-warm:       #FFFBF7;
+
+  /* ── Text ── */
+  --text-heading:    #1C1007;
+  --text-body:       #3D2B1F;
+  --text-muted:      #7A5C4A;
+  --text-light:      #A8816A;
+  --text-on-primary: #FFFFFF;
+
+  /* ── Typography ── */
+  --font-heading: 'Literata', Georgia, serif;
+  --font-body:    'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+
+  /* ── Spacing ── */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 28px;
+
+  /* ── Shadows ── */
+  --shadow-sm:   0 1px 3px rgba(93, 64, 55, 0.06), 0 1px 2px rgba(93, 64, 55, 0.04);
+  --shadow-md:   0 4px 16px rgba(93, 64, 55, 0.08), 0 2px 6px rgba(93, 64, 55, 0.05);
+  --shadow-lg:   0 10px 32px rgba(93, 64, 55, 0.10), 0 4px 12px rgba(93, 64, 55, 0.06);
+  --shadow-card: 0 2px 8px rgba(93, 64, 55, 0.06);
+  --shadow-card-hover: 0 8px 28px rgba(93, 64, 55, 0.12);
+
+  /* ── Borders ── */
+  --border-color: rgba(93, 64, 55, 0.10);
+  --border-warm:  rgba(178, 34, 34, 0.12);
+
+  /* ── Transitions ── */
+  --transition-fast:   all 0.18s ease;
+  --transition-smooth: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Status Colors ── */
+  --status-preparing: #2F8B57;
+  --status-preparing-bg: rgba(47, 139, 87, 0.10);
+  --status-shipped: #E67E22;
+  --status-shipped-bg: rgba(230, 126, 34, 0.10);
+  --status-delivered: #27AE60;
+  --status-delivered-bg: rgba(39, 174, 96, 0.10);
+  --status-cancelled: #C0392B;
+  --status-cancelled-bg: rgba(192, 57, 43, 0.10);
+}
+
+/* ── Reset ── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-body);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-heading);
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+p {
+  font-family: var(--font-body);
+  color: var(--text-body);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, select, textarea {
+  font-family: var(--font-body);
+}
+
+/* ── Custom Scrollbar ── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(178, 34, 34, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* ── Focus Styles ── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

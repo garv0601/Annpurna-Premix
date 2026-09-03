@@ -1,0 +1,41 @@
+/* ================================================================
+   AdminLayout Styles
+   ================================================================ */
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-main {
+  flex: 1;
+  margin-left: var(--admin-sidebar-width);
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* prevent flex child from overflowing */
+}
+
+.admin-content {
+  flex: 1;
+  padding: 24px 28px 40px;
+  overflow-x: hidden;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .admin-main {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-content {
+    padding: 18px 16px 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-content {
+    padding: 14px 12px 28px;
+  }
+}

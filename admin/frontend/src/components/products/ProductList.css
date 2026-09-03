@@ -1,0 +1,399 @@
+/* ================================================================
+   ProductList Styles
+   ================================================================ */
+
+.plist-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.plist-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+}
+
+.plist-empty svg { color: var(--text-light); }
+.plist-empty p   { font-size: 14px; }
+
+/* ── Desktop Table ── */
+.plist-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.plist-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 650px;
+}
+
+.plist-table thead th {
+  text-align: left;
+  padding: 14px 16px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  background: var(--bg-page);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.plist-table thead th:first-child { padding-left: 22px; }
+.plist-table thead th:last-child  { text-align: center; }
+
+.plist-table tbody tr {
+  transition: var(--transition-fast);
+}
+
+.plist-table tbody tr:hover { background: var(--bg-warm); }
+
+.plist-table tbody td {
+  padding: 14px 16px;
+  font-size: 13.5px;
+  border-bottom: 1px solid rgba(93, 64, 55, 0.05);
+  vertical-align: middle;
+}
+
+.plist-table tbody td:first-child { padding-left: 22px; }
+.plist-table tbody td:last-child  { text-align: center; }
+
+/* ── Product cell (image + name) ── */
+.plist-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.plist-product-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--border-color);
+}
+
+.plist-product-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.plist-product-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary-light), rgba(255, 195, 0, 0.06));
+  color: var(--color-primary);
+}
+
+.plist-product-name {
+  font-weight: 600;
+  color: var(--text-heading);
+  font-size: 13.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.plist-sku {
+  font-size: 12px;
+  color: var(--text-light);
+  font-weight: 500;
+  font-family: var(--font-body);
+  letter-spacing: 0.3px;
+}
+
+.plist-category {
+  font-size: 13px;
+  color: var(--text-body);
+  font-weight: 500;
+  background: var(--bg-page);
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.plist-price {
+  font-weight: 700;
+  color: var(--text-heading);
+  font-family: var(--font-heading);
+  font-size: 14px;
+}
+
+/* ── Action Buttons ── */
+.plist-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.plist-action-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-page);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.plist-view-btn {
+  color: var(--text-muted);
+}
+.plist-view-btn:hover {
+  background: rgba(52, 152, 219, 0.08);
+  border-color: rgba(52, 152, 219, 0.2);
+  color: #2980B9;
+}
+
+.plist-edit-btn {
+  color: var(--text-muted);
+}
+.plist-edit-btn:hover {
+  background: var(--color-secondary-light);
+  border-color: rgba(255, 195, 0, 0.25);
+  color: #C8960E;
+}
+
+.plist-delete-btn {
+  color: var(--text-muted);
+}
+.plist-delete-btn:hover {
+  background: rgba(192, 57, 43, 0.06);
+  border-color: rgba(192, 57, 43, 0.15);
+  color: #C0392B;
+}
+
+/* ── Mobile Cards ── */
+.plist-mobile-cards {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+
+.plist-mobile-card {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-page);
+  overflow: hidden;
+}
+
+.pmc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.pmc-top-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pmc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+}
+
+.pmc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pmc-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.pmc-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-surface);
+}
+
+.pmc-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border: 1px solid var(--border-color);
+  background: var(--bg-page);
+  color: var(--text-muted);
+}
+
+.pmc-view:hover {
+  background: rgba(52, 152, 219, 0.08);
+  color: #2980B9;
+  border-color: rgba(52, 152, 219, 0.2);
+}
+
+.pmc-edit:hover {
+  background: var(--color-secondary-light);
+  color: #C8960E;
+  border-color: rgba(255, 195, 0, 0.25);
+}
+
+.pmc-delete:hover {
+  background: rgba(192, 57, 43, 0.06);
+  color: #C0392B;
+  border-color: rgba(192, 57, 43, 0.15);
+}
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  .plist-table-scroll { display: none; }
+  .plist-mobile-cards  { display: flex; }
+}
+
+@media (max-width: 420px) {
+  .pmc-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* ================================================================
+   Visibility Toggle
+   ================================================================ */
+
+/* Cell wrapper */
+.plist-visibility-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+/* Hide native checkbox */
+.plist-toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Label wraps both the hidden input and the visual track */
+.plist-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Visual track */
+.plist-toggle-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: var(--border-color, #ddd);
+  border-radius: 20px;
+  transition: background 0.2s ease;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Active (checked) track */
+.plist-toggle-input:checked + .plist-toggle-track {
+  background: #22c55e;   /* green-500 */
+}
+
+/* Focus ring */
+.plist-toggle-input:focus-visible + .plist-toggle-track {
+  outline: 2px solid var(--color-primary, #FFC300);
+  outline-offset: 2px;
+}
+
+/* Thumb */
+.plist-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.18s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.plist-toggle-input:checked + .plist-toggle-track .plist-toggle-thumb {
+  transform: translateX(16px);
+}
+
+/* Busy / disabled */
+.plist-toggle-busy {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Inline feedback badges */
+.plist-vis-feedback {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  animation: plist-fade-in 0.15s ease;
+  white-space: nowrap;
+}
+
+.plist-vis-ok {
+  color: #16a34a;
+  background: #dcfce7;
+}
+
+.plist-vis-err {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+@keyframes plist-fade-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}

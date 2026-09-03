@@ -1,0 +1,18 @@
+{
+  "name": "web-application-backend",
+  "version": "1.0.0",
+  "description": "REST API backend server for AETHER Web Application",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "razorpay": "^2.9.8"
+  }
+}

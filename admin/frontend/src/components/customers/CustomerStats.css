@@ -1,0 +1,85 @@
+/* ================================================================
+   CustomerStats Styles
+   ================================================================ */
+
+.cstats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.cstats-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+}
+
+.cstats-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-warm);
+}
+
+.cstats-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.cstats-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cstats-trend {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #27AE60;
+  background: rgba(39, 174, 96, 0.1);
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.cstats-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cstats-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cstats-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-heading);
+  font-family: var(--font-heading);
+  line-height: 1.1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .cstats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .cstats-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,127 @@
+/* ================================================================
+   OrderStats Styles
+   ================================================================ */
+
+.order-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.order-stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 18px 18px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-smooth);
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle colored top accent line */
+.order-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 14px 14px 0 0;
+}
+
+.ostat-yellow::before { background: var(--color-secondary); }
+.ostat-green::before  { background: var(--color-tertiary); }
+.ostat-teal::before   { background: #27AE60; }
+.ostat-red::before    { background: var(--color-primary); }
+
+/* ── Icon ── */
+.ostat-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ostat-yellow .ostat-icon-wrap {
+  background: var(--color-secondary-light);
+  color: #C8960E;
+}
+
+.ostat-green .ostat-icon-wrap {
+  background: var(--color-tertiary-light);
+  color: var(--color-tertiary);
+}
+
+.ostat-teal .ostat-icon-wrap {
+  background: rgba(39, 174, 96, 0.10);
+  color: #27AE60;
+}
+
+.ostat-red .ostat-icon-wrap {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* ── Content ── */
+.ostat-content {
+  min-width: 0;
+}
+
+.ostat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 4px;
+}
+
+.ostat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-heading);
+  font-family: var(--font-heading);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.ostat-trend {
+  font-size: 11.5px;
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .order-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .order-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .order-stat-card {
+    padding: 14px 16px 12px;
+  }
+
+  .ostat-value {
+    font-size: 22px;
+  }
+
+  .ostat-icon-wrap {
+    width: 38px;
+    height: 38px;
+  }
+}

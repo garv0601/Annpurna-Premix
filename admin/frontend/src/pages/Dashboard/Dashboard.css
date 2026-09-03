@@ -1,0 +1,128 @@
+/* ================================================================
+   Dashboard Page Layout
+   ================================================================ */
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── KPI Grid ── */
+.dashboard-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+/* ── Middle Row ── */
+.dashboard-middle {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+}
+
+.dashboard-chart-col {
+  min-width: 0;
+}
+
+.dashboard-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── Orders ── */
+.dashboard-orders {
+  width: 100%;
+}
+
+/* ── Loading / Error States ── */
+.dashboard-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 400px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--color-primary);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.dashboard-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: var(--color-primary);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════
+   Responsive Breakpoints
+   ═══════════════════════════════════════════ */
+
+/* Large Tablet */
+@media (max-width: 1200px) {
+  .dashboard-middle {
+    grid-template-columns: 1fr 300px;
+  }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .dashboard-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboard-middle {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-side-col {
+    flex-direction: row;
+    gap: 18px;
+  }
+
+  .dashboard-side-col > * {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* Small Tablet */
+@media (max-width: 768px) {
+  .dashboard-page {
+    gap: 18px;
+  }
+
+  .dashboard-kpis {
+    gap: 14px;
+  }
+
+  .dashboard-side-col {
+    flex-direction: column;
+  }
+}
+
+/* Mobile */
+@media (max-width: 580px) {
+  .dashboard-kpis {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

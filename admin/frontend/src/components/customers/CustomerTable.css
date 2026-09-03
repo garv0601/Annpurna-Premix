@@ -1,0 +1,320 @@
+/* ================================================================
+   CustomerTable Styles
+   ================================================================ */
+
+.ctable-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.ctable-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+}
+
+.ctable-empty svg { color: var(--text-light); }
+.ctable-empty p   { font-size: 14px; }
+
+/* ── Desktop Table ── */
+.ctable-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ctable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.ctable thead th {
+  text-align: left;
+  padding: 14px 16px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  background: var(--bg-page);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.ctable thead th:first-child { padding-left: 24px; }
+.ctable thead th:last-child  { text-align: center; }
+
+.ctable tbody tr {
+  transition: var(--transition-fast);
+}
+
+.ctable tbody tr:hover { background: var(--bg-warm); }
+
+.ctable tbody td {
+  padding: 16px;
+  font-size: 13.5px;
+  border-bottom: 1px solid rgba(93, 64, 55, 0.05);
+  vertical-align: middle;
+}
+
+.ctable tbody td:first-child { padding-left: 24px; }
+.ctable tbody td:last-child  { text-align: center; }
+
+/* ── Customer Cell ── */
+.ctable-customer-cell {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ctable-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--border-color);
+  background: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.ctable-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ctable-name {
+  font-weight: 600;
+  color: var(--text-heading);
+  font-size: 14px;
+}
+
+/* ── Contact Cell ── */
+.ctable-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ctable-email {
+  font-weight: 500;
+  color: var(--text-body);
+}
+
+.ctable-phone {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── Metrics & Date ── */
+.ctable-metric {
+  font-weight: 600;
+  color: var(--text-heading);
+  font-family: var(--font-body);
+}
+
+.ctable-date {
+  color: var(--text-body);
+  font-size: 13px;
+}
+
+/* ── Action Button ── */
+.ctable-action-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-page);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.ctable-action-btn:hover {
+  background: rgba(52, 152, 219, 0.08);
+  border-color: rgba(52, 152, 219, 0.2);
+  color: #2980B9;
+}
+
+/* ── Mobile Cards ── */
+.ctable-mobile-cards {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+
+.ctable-mobile-card {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-page);
+  overflow: hidden;
+}
+
+.cmc-top {
+  padding: 14px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cmc-name-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.cmc-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cmc-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-body);
+}
+
+.cmc-contact-row svg {
+  color: var(--text-light);
+}
+
+.cmc-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.cmc-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cmc-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.cmc-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.cmc-footer {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-surface);
+}
+
+.cmc-view-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border: 1px solid var(--border-color);
+  background: var(--bg-page);
+  color: var(--text-muted);
+}
+
+.cmc-view-btn:hover {
+  background: rgba(52, 152, 219, 0.08);
+  color: #2980B9;
+  border-color: rgba(52, 152, 219, 0.2);
+}
+
+/* ── Pagination Footer ── */
+.ctable-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-page);
+}
+
+.cpag-info {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.cpag-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cpag-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-body);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.cpag-btn:hover:not(:disabled) {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--border-warm);
+}
+
+.cpag-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cpag-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  .ctable-scroll { display: none; }
+  .ctable-mobile-cards  { display: flex; }
+  .ctable-pagination {
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+}

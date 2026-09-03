@@ -1,0 +1,309 @@
+/* ================================================================
+   ANNPURNA Account Section — Responsive CSS
+   Pure layout responsiveness. No functionality or visual changes.
+   ================================================================ */
+
+/* ── Hide scrollbar on mobile nav ── */
+.account-mobile-nav::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Account Layout Grid ──────────────────────────────────────── */
+
+/* Desktop default: sidebar + content */
+#account-layout {
+  min-width: 0; /* prevent grid blowout */
+}
+
+#account-layout > * {
+  min-width: 0; /* prevent children from blowing out grid */
+}
+
+/* ── Account Grid (Profile Overview Dashboard) ────────────────── */
+/* Already handled in AccountPage.jsx with inline <style> blocks,
+   but we reinforce mobile/tablet stacking here */
+
+/* ── Order Card Responsive ──────────────────────────────────── */
+.order-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.order-card-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ── Order Item Responsive ──────────────────────────────────── */
+.order-item-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ── Order Details Header ──────────────────────────────────── */
+.order-detail-header-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ── Address Card Responsive ──────────────────────────────── */
+.address-card-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.address-card-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Payment Card Responsive ──────────────────────────────── */
+.payment-card-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.payment-card-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Edit Profile Form ──────────────────────────────────────── */
+.edit-profile-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.edit-profile-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.edit-profile-photo-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+/* ── Address Form Grid ─────────────────────────────────────── */
+.address-form-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TABLET BREAKPOINTS (600px – 1023px)
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1023px) and (min-width: 769px) {
+  /* Sidebar narrows on tablet */
+  #account-layout[data-has-sidebar="true"] {
+    grid-template-columns: 220px 1fr;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SMALL TABLET / LARGE MOBILE (max-width: 768px)
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Account grid becomes single column */
+  #account-layout {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* ── Edit Profile ── */
+  .edit-profile-form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .edit-profile-photo-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE (max-width: 600px)
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  /* Order card buttons stack on very small */
+  .order-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .order-card-footer > div:first-child {
+    text-align: center;
+  }
+
+  .order-card-actions {
+    justify-content: center;
+  }
+
+  /* Order detail header stacks */
+  .order-detail-header-actions {
+    width: 100%;
+  }
+
+  .order-detail-header-actions button {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  /* Address card actions stack below content */
+  .address-card-layout {
+    flex-direction: column;
+  }
+  
+  .address-card-actions {
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: 8px;
+    border-top: 1px solid rgba(93, 64, 55, 0.06);
+  }
+
+  /* Payment card layout stacks */
+  .payment-card-layout {
+    flex-direction: column;
+  }
+
+  .payment-card-actions {
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: 8px;
+    border-top: 1px solid rgba(93, 64, 55, 0.06);
+  }
+
+  /* Edit profile buttons stack */
+  .edit-profile-buttons {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .edit-profile-buttons button {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+  
+  /* Address form: single column on mobile */
+  .address-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SMALL MOBILE (max-width: 480px)
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  /* Order items in detail view: reduce image size */
+  .order-item-row {
+    gap: 12px;
+  }
+  
+  .order-item-row .order-item-image {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  /* Reduce card padding */
+  .order-card-responsive {
+    padding: 16px !important;
+  }
+
+  .address-card-responsive {
+    padding: 16px !important;
+  }
+
+  .payment-card-responsive {
+    padding: 16px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EXTRA SMALL MOBILE (max-width: 390px)
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 390px) {
+  /* Reduce form grid minmax to prevent overflow */
+  .edit-profile-form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Ensure order item images don't overflow */
+  .order-item-row .order-item-image {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  /* Order card item thumbnails */
+  .order-card-responsive .order-card-thumbnail {
+    width: 48px !important;
+    height: 48px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL OVERFLOW PROTECTION (all sizes)
+   ══════════════════════════════════════════════════════════════ */
+
+/* Prevent any account element from causing horizontal scroll */
+.account-page-root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+.account-content-area {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Ensure text doesn't overflow containers */
+.account-page-root h1,
+.account-page-root h2,
+.account-page-root h3,
+.account-page-root h4 {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Ensure long email addresses or UPI IDs wrap */
+.account-page-root span,
+.account-page-root p,
+.account-page-root div {
+  overflow-wrap: break-word;
+}
+
+/* All images in account pages are responsive */
+.account-page-root img {
+  max-width: 100%;
+  height: auto;
+}

@@ -1,0 +1,34 @@
+.rtable-product {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-heading);
+}
+
+.rtable-text-preview {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: italic;
+}
+
+.rtable-stars {
+  display: flex;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.rtable-star-filled {
+  color: #FFC300; /* ANNPURNA secondary color */
+}
+
+.rtable-star-empty {
+  color: var(--border-color);
+}
+
+.rtable-avatar {
+  background: var(--bg-surface-2);
+  color: var(--text-heading);
+}

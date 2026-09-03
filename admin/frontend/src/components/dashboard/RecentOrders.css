@@ -1,0 +1,202 @@
+/* ================================================================
+   RecentOrders Styles
+   ================================================================ */
+
+.recent-orders-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+}
+
+.recent-orders-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.recent-orders-header h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.view-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: var(--transition-fast);
+}
+
+.view-all-btn:hover {
+  background: var(--color-primary-light);
+}
+
+/* ── Desktop Table ── */
+.recent-orders-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.recent-orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 540px;
+}
+
+.recent-orders-table thead th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.recent-orders-table tbody tr {
+  transition: var(--transition-fast);
+}
+
+.recent-orders-table tbody tr:hover {
+  background: var(--bg-page);
+}
+
+.recent-orders-table tbody td {
+  padding: 14px;
+  font-size: 13.5px;
+  border-bottom: 1px solid rgba(93, 64, 55, 0.05);
+  white-space: nowrap;
+}
+
+.order-id {
+  font-weight: 600;
+  color: var(--text-heading);
+  font-size: 13px;
+}
+
+.order-customer {
+  font-weight: 500;
+  color: var(--text-body);
+}
+
+.order-date {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.order-amount {
+  font-weight: 600;
+  color: var(--text-heading);
+  font-family: var(--font-heading);
+}
+
+/* ── Status Pills ── */
+.order-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-preparing {
+  background: var(--status-preparing-bg);
+  color: var(--status-preparing);
+}
+
+.status-shipped {
+  background: var(--status-shipped-bg);
+  color: var(--status-shipped);
+}
+
+.status-delivered {
+  background: var(--status-delivered-bg);
+  color: var(--status-delivered);
+}
+
+.status-cancelled {
+  background: var(--status-cancelled-bg);
+  color: var(--status-cancelled);
+}
+
+/* ── Mobile Cards ── */
+.recent-orders-mobile {
+  display: none;
+}
+
+.order-mobile-card {
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.order-mobile-card:last-child {
+  margin-bottom: 0;
+}
+
+.order-mobile-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.order-mobile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.order-mobile-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.order-mobile-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .recent-orders-table-wrap {
+    display: none;
+  }
+
+  .recent-orders-mobile {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .recent-orders-card {
+    padding: 16px 14px;
+  }
+
+  .recent-orders-header h3 {
+    font-size: 15px;
+  }
+}

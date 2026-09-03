@@ -1,0 +1,43 @@
+.cbadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.15px;
+}
+
+.cbadge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Variants ── */
+.cbadge-active {
+  background: rgba(39, 174, 96, 0.10);
+  color: #27AE60;
+}
+.cbadge-active .cbadge-dot {
+  background: #27AE60;
+}
+
+.cbadge-expired {
+  background: rgba(192, 57, 43, 0.08);
+  color: #C0392B;
+}
+.cbadge-expired .cbadge-dot {
+  background: #C0392B;
+}
+
+.cbadge-scheduled {
+  background: rgba(41, 128, 185, 0.08);
+  color: #2980B9;
+}
+.cbadge-scheduled .cbadge-dot {
+  background: #2980B9;
+}

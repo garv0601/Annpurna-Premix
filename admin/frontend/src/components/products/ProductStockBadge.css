@@ -1,0 +1,60 @@
+/* ================================================================
+   ProductStockBadge Styles
+   ================================================================ */
+
+.pstock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.15px;
+}
+
+.pstock-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pstock-qty {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* ── Variants ── */
+.pstock-in {
+  background: rgba(39, 174, 96, 0.10);
+  color: #27AE60;
+}
+.pstock-in .pstock-dot { background: #27AE60; }
+
+.pstock-low {
+  background: rgba(255, 195, 0, 0.12);
+  color: #C8960E;
+}
+.pstock-low .pstock-dot {
+  background: #D4A017;
+  animation: pulse-stock 1.5s ease-in-out infinite;
+}
+
+.pstock-out {
+  background: rgba(192, 57, 43, 0.08);
+  color: #C0392B;
+}
+.pstock-out .pstock-dot { background: #C0392B; }
+
+.pstock-inactive {
+  background: rgba(93, 64, 55, 0.06);
+  color: var(--text-light);
+}
+.pstock-inactive .pstock-dot { background: var(--text-light); }
+
+@keyframes pulse-stock {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}

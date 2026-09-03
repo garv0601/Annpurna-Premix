@@ -1,0 +1,163 @@
+/* ================================================================
+   ANNPURNA PREMIX — Global Design System
+   Brand: Traditional Indian food premix | Warm, accessible, editorial
+   ================================================================ */
+
+:root {
+  /* ── Brand Colors ── */
+  --color-primary:     #B22222;   /* Firebrick Red  — logo, CTA, accents */
+  --color-primary-dark: #8B1A1A;  /* Deep red for hover states */
+  --color-primary-light: rgba(178, 34, 34, 0.08);
+  --color-secondary:   #FFC300;   /* Warm Yellow    — highlights, warmth */
+  --color-tertiary:    #2F8B57;   /* Forest Green   — freshness, trust */
+  --color-neutral:     #5D4037;   /* Earthy Brown   — supporting text */
+
+  /* ── Background Palette ── */
+  --bg-page:         #FFF8F4;     /* Warm ivory page background */
+  --bg-surface:      #FFFBF7;     /* Slightly warmer card surface */
+  --bg-surface-2:    #FEF4EC;     /* Section dividers */
+  --bg-cta:          #B22222;     /* Primary CTA section */
+
+  /* ── Text ── */
+  --text-heading:    #1C1007;     /* Very dark brown-black for headings */
+  --text-body:       #3D2B1F;     /* Warm dark brown for body */
+  --text-muted:      #7A5C4A;     /* Muted brown for secondary info */
+  --text-light:      #A8816A;     /* Light muted for captions/labels */
+  --text-on-primary: #FFFFFF;     /* White on primary/red bg */
+  --text-on-cta:     #FFFFFF;
+
+  /* ── Typography ── */
+  --font-heading: 'Literata', Georgia, serif;
+  --font-body:    'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+
+  /* ── Spacing / Sizing ── */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 28px;
+
+  /* ── Shadows ── */
+  --shadow-sm:   0 1px 3px rgba(93, 64, 55, 0.08), 0 1px 2px rgba(93, 64, 55, 0.06);
+  --shadow-md:   0 4px 16px rgba(93, 64, 55, 0.10), 0 2px 6px rgba(93, 64, 55, 0.07);
+  --shadow-lg:   0 10px 32px rgba(93, 64, 55, 0.12), 0 4px 12px rgba(93, 64, 55, 0.08);
+  --shadow-card: 0 2px 8px rgba(93, 64, 55, 0.08);
+  --shadow-card-hover: 0 8px 28px rgba(93, 64, 55, 0.14);
+
+  /* ── Borders ── */
+  --border-color: rgba(93, 64, 55, 0.12);
+  --border-warm:  rgba(178, 34, 34, 0.15);
+
+  /* ── Transitions ── */
+  --transition-fast:   all 0.18s ease;
+  --transition-smooth: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Layout ── */
+  --container-max: 1200px;
+  --container-pad: clamp(16px, 4vw, 40px);
+}
+
+/* ── Reset ── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-body);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Typography Base ── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-heading);
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+p {
+  font-family: var(--font-body);
+  color: var(--text-body);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+/* ── Custom Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-page);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(178, 34, 34, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* ── Utility Classes ── */
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--container-pad);
+}
+
+.section-pad {
+  padding: clamp(60px, 8vw, 100px) 0;
+}
+
+/* ── Focus Styles (accessibility) ── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+
+/* ── Reduced-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ── Responsive breakpoints via media queries where needed ── */
+/* Breakpoints reference:
+   xs:  360px
+   sm:  390px
+   md:  768px (tablet)
+   lg:  1024px
+   xl:  1280px
+   2xl: 1440px
+*/

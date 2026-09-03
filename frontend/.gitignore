@@ -1,0 +1,26 @@
+# ── Dependencies ────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+build/
+
+# ── Environment files — NEVER commit these ──────────────────
+.env.local
+.env.*.local
+# .env is committed as a template with EMPTY values only.
+# Fill real values in .env.local (which is gitignored).
+
+# ── Logs ────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Editor / OS ──────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+
+# ── Vite cache ───────────────────────────────────────────────
+.vite/

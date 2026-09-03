@@ -1,0 +1,112 @@
+/* ================================================================
+   DeleteProductDialog Styles
+   ================================================================ */
+
+.dpd-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: 960;
+}
+
+.dpd-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  max-width: 90vw;
+  background: var(--bg-surface);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  z-index: 961;
+  padding: 28px 24px 22px;
+  text-align: center;
+}
+
+.dpd-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(192, 57, 43, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: #C0392B;
+}
+
+.dpd-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 8px;
+}
+
+.dpd-message {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-bottom: 22px;
+}
+
+.dpd-message strong {
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.dpd-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.dpd-cancel {
+  padding: 9px 22px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-body);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.dpd-cancel:hover {
+  background: var(--bg-surface-2);
+}
+
+.dpd-confirm {
+  padding: 9px 22px;
+  border-radius: 10px;
+  border: none;
+  background: #C0392B;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: 0 2px 10px rgba(192, 57, 43, 0.3);
+}
+
+.dpd-confirm:hover {
+  background: #A93226;
+  box-shadow: 0 4px 16px rgba(192, 57, 43, 0.4);
+}
+
+@media (max-width: 420px) {
+  .dpd-dialog {
+    padding: 22px 18px 18px;
+  }
+
+  .dpd-actions {
+    flex-direction: column;
+  }
+
+  .dpd-cancel,
+  .dpd-confirm {
+    width: 100%;
+  }
+}

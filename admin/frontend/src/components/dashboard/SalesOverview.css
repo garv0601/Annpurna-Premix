@@ -1,0 +1,137 @@
+/* ================================================================
+   SalesOverview Styles
+   ================================================================ */
+
+.sales-overview-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 22px 22px 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.sales-overview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.sales-overview-header h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.sales-period-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.period-dropdown {
+  appearance: none;
+  padding: 7px 30px 7px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-page);
+  font-size: 12.5px;
+  color: var(--text-body);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.period-dropdown:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.period-chevron {
+  position: absolute;
+  right: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.sales-chart-container {
+  width: 100%;
+  min-height: 280px;
+}
+
+/* ── Tooltip ── */
+.sales-tooltip {
+  background: var(--admin-sidebar-bg);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.sales-tooltip-day {
+  font-size: 11px;
+  color: rgba(232, 213, 196, 0.6);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.sales-tooltip-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  font-family: var(--font-heading);
+}
+
+.sales-tooltip-orders {
+  font-size: 12px;
+  color: var(--color-secondary);
+  margin-top: 2px;
+}
+
+/* ── Legend ── */
+.sales-legend {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+  margin-top: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot-sales {
+  background: var(--color-primary);
+}
+
+.legend-dot-orders {
+  background: var(--color-secondary);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .sales-overview-card {
+    padding: 18px 16px 14px;
+  }
+
+  .sales-chart-container {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sales-overview-header h3 {
+    font-size: 15px;
+  }
+}
