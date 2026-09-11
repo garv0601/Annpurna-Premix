@@ -1,27 +1,37 @@
 /* ================================================================
-   OrderDetailDrawer Styles
+   Order Detail Modal Styles
    ================================================================ */
 
-.od-overlay {
+.od-modal-layer {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(3px);
   z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.od-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .od-drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 440px;
-  max-width: 92vw;
-  height: 100vh;
+  position: relative;
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 48px);
   background: var(--bg-surface);
-  z-index: 901;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  box-shadow: -6px 0 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.22);
 }
 
 /* ── Header ── */
@@ -86,6 +96,69 @@
 .od-date {
   font-size: 13px;
   color: var(--text-muted);
+  text-align: right;
+}
+
+.od-header-grid {
+  margin-top: 14px;
+}
+
+.od-status-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-heading);
+  margin-bottom: 7px;
+}
+
+.od-status-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.od-status-select {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-body);
+  font: inherit;
+  font-size: 13.5px;
+}
+
+.od-status-select:focus {
+  outline: 2px solid var(--color-primary-light);
+  border-color: var(--color-primary);
+}
+
+.od-status-select:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.od-status-loading,
+.od-status-message {
+  font-size: 12px;
+}
+
+.od-status-loading {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.od-status-message {
+  margin-top: 7px;
+}
+
+.od-status-message-success {
+  color: #277A48;
+}
+
+.od-status-message-error {
+  color: #C0392B;
 }
 
 /* ── Sections ── */
@@ -142,6 +215,14 @@
   color: var(--text-body);
 }
 
+.od-info-wide {
+  grid-column: 1 / -1;
+}
+
+.od-break-word {
+  overflow-wrap: anywhere;
+}
+
 /* ── Items ── */
 .od-items {
   display: flex;
@@ -171,6 +252,13 @@
   flex-shrink: 0;
 }
 
+.od-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
 .od-item-info {
   flex: 1;
   min-width: 0;
@@ -191,12 +279,24 @@
   margin-top: 1px;
 }
 
-.od-item-total {
+.od-item-subtotal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.od-item-subtotal span {
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+.od-item-subtotal strong {
   font-size: 13.5px;
   font-weight: 700;
   color: var(--text-heading);
   font-family: var(--font-heading);
-  flex-shrink: 0;
 }
 
 /* ── Payment Status ── */
@@ -264,6 +364,10 @@
   gap: 8px;
 }
 
+.od-totals-title {
+  margin-bottom: 3px;
+}
+
 .od-total-row {
   display: flex;
   align-items: center;
@@ -299,9 +403,14 @@
 
 /* ── Responsive ── */
 @media (max-width: 480px) {
+  .od-modal-layer {
+    padding: 12px;
+  }
+
   .od-drawer {
-    width: 100vw;
-    max-width: 100vw;
+    width: 100%;
+    max-height: calc(100dvh - 24px);
+    border-radius: 10px;
   }
 
   .od-header {
@@ -314,5 +423,13 @@
 
   .od-info-grid {
     grid-template-columns: 1fr;
+  }
+
+  .od-info-wide {
+    grid-column: auto;
+  }
+
+  .od-item {
+    align-items: flex-start;
   }
 }

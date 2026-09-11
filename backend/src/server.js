@@ -1,6 +1,9 @@
+// Must be the first import — populates process.env before any other module
+// (config/razorpay.js, config/supabase.js, config/config.js) reads it at import time.
+import './config/env.js';
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { config } from './config/config.js';
 import { logger } from './middleware/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -8,9 +11,9 @@ import productRoutes from './routes/productRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import { orderRouter, adminOrderRouter } from './routes/orderRoutes.js';
-
-// Load environment variables
-dotenv.config();
+import { accountRouter } from './routes/accountRoutes.js';
+import { couponRouter } from './routes/couponRoutes.js';
+import { adminCustomerRouter } from './routes/customerRoutes.js';
 
 const app = express();
 
@@ -25,6 +28,9 @@ app.use(`${config.apiPrefix}/reviews`,       reviewRoutes);
 app.use(`${config.apiPrefix}/contact`,       contactRoutes);
 app.use(`${config.apiPrefix}/orders`,        orderRouter);
 app.use(`${config.apiPrefix}/admin/orders`,  adminOrderRouter);
+app.use(`${config.apiPrefix}/account`,       accountRouter);
+app.use(`${config.apiPrefix}/coupons`,       couponRouter);
+app.use(`${config.apiPrefix}/admin/customers`, adminCustomerRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

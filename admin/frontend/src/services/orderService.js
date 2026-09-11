@@ -111,11 +111,23 @@ export async function getOrderDetails(orderId) {
   return order;
 }
 
-/**
- * Update order status.
- * Future: implement a backend PATCH endpoint.
- */
 export async function updateOrderStatus(orderId, newStatus) {
-  console.log(`[Admin OrderService] Update order ${orderId} to ${newStatus} — endpoint not yet implemented`);
-  return { success: true };
+  const token = await getAdminToken();
+  if (!token) throw new Error('Admin authentication required');
+
+  const res = await fetch(`${BACKEND_API}/admin/orders/${orderId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status: newStatus }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.message || 'Failed to update order status');
+  }
+
+  return data;
 }

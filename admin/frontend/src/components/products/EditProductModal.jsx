@@ -1,7 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ImagePlus, CheckCircle2 } from 'lucide-react';
+import { X, ImagePlus, CheckCircle2, FileImage } from 'lucide-react';
 import './ProductFormModal.css';
+import {
+  validateProductImageFile,
+  uploadProductImage,
+  deleteProductImageByPath,
+  deleteProductImageByUrl,
+  isManagedProductImageUrl,
+  ALLOWED_IMAGE_HINT,
+} from '../../utils/productImageUpload';
 
 const overlayVariants = {
   hidden: { opacity: 0 },
@@ -9,8 +17,8 @@ const overlayVariants = {
 };
 
 const modalVariants = {
-  hidden: { opacity: 0, scale: 0.95, x: '-50%', y: '-45%' },
-  visible: { opacity: 1, scale: 1, x: '-50%', y: '-50%', transition: { type: 'spring', stiffness: 350, damping: 28 } },
+  hidden: { opacity: 0, scale: 0.95, y: 16 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 28 } },
 };
 
 /**
@@ -40,6 +48,14 @@ export default function EditProductModal({ product, isOpen, onClose, onSubmit, c
   const [submitError, setSubmitError] = useState(null);
   const [errors, setErrors] = useState({});
 
+  // Gallery upload state — an uploaded file always takes priority over the Image URL field.
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageError, setImageError] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
+  const originalImageUrlRef = useRef('');
+
   // Populate form when product changes
   useEffect(() => {
     if (product && isOpen) {
@@ -59,6 +75,10 @@ export default function EditProductModal({ product, isOpen, onClose, onSubmit, c
         is_featured: product.is_featured ?? false,
         is_bestseller: product.is_bestseller ?? false,
       });
+      originalImageUrlRef.current = product.image_url || '';
+      setImageFile(null);
+      setImagePreview(null);
+      setImageError(null);
       setErrors({});
       setSubmitError(null);
       setSaveSuccess(false);
@@ -66,12 +86,49 @@ export default function EditProductModal({ product, isOpen, onClose, onSubmit, c
     }
   }, [product, isOpen]);
 
+  // Revoke the object URL preview when it changes or the modal unmounts, to avoid leaks.
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: null }));
     }
     if (submitError) setSubmitError(null);
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (!file) return;
+
+    const { valid, error } = validateProductImageFile(file);
+    if (!valid) {
+      setImageError(error);
+      return;
+    }
+
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setImageError(null);
+    if (submitError) setSubmitError(null);
+  };
+
+  // Removes the newly selected upload (reverting to the current Image URL),
+  // or clears the image entirely if no new file was selected.
+  const handleRemoveImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview(null);
+    setImageError(null);
+    if (!imageFile) {
+      handleChange('image_url', '');
+    }
   };
 
   const handleToggle = (field) => {
@@ -99,8 +156,30 @@ export default function EditProductModal({ product, isOpen, onClose, onSubmit, c
     if (!product || !validate()) return;
 
     setSubmitting(true);
+
+    // Gallery upload takes priority over the Image URL field. Upload first
+    // so we never save a product referencing a broken/incomplete image.
+    let finalImageUrl = form.image_url || '';
+    let uploadedPath = null;
+
+    if (imageFile) {
+      setUploadingImage(true);
+      try {
+        const { publicUrl, path } = await uploadProductImage(imageFile, product.id);
+        finalImageUrl = publicUrl;
+        uploadedPath = path;
+      } catch (err) {
+        setUploadingImage(false);
+        setSubmitting(false);
+        setSubmitError(err.message || 'Unable to upload image. Please try again.');
+        return;
+      }
+      setUploadingImage(false);
+    }
+
     const result = await onSubmit(product.id, {
       ...form,
+      image_url: finalImageUrl,
       price: parseFloat(form.price) || 0,
       compare_at_price: form.compare_at_price ? parseFloat(form.compare_at_price) : null,
       stock_quantity: parseInt(form.stock_quantity, 10) || 0,
@@ -108,7 +187,19 @@ export default function EditProductModal({ product, isOpen, onClose, onSubmit, c
       servings: form.servings || null,
       category_id: form.category_id || null,
     });
-    
+
+    if (result?.success) {
+      // Clean up the previous uploaded image only if it was replaced/removed
+      // and it lived in our managed bucket (never touch external URLs).
+      const previousUrl = originalImageUrlRef.current;
+      if (previousUrl && previousUrl !== finalImageUrl && isManagedProductImageUrl(previousUrl)) {
+        deleteProductImageByUrl(previousUrl);
+      }
+    } else if (uploadedPath) {
+      // The update failed — don't leave an orphaned upload behind.
+      deleteProductImageByPath(uploadedPath);
+    }
+
     setSubmitting(false);
     if (result?.success) {
       setSaveSuccess(true);
@@ -151,16 +242,69 @@ export default function EditProductModal({ product, isOpen, onClose, onSubmit, c
 
             <form className="pfm-form" onSubmit={handleSubmit} noValidate>
               <div className="pfm-scroll-body">
-                {/* Image URL */}
+                {/* Product Image — URL or gallery upload (upload takes priority) */}
                 <div className="pfm-field">
-                  <label className="pfm-label">Image URL</label>
+                  <label className="pfm-label">Product Image</label>
+
                   <input
                     className="pfm-input"
                     type="text"
                     value={form.image_url}
                     onChange={(e) => handleChange('image_url', e.target.value)}
                     placeholder="https://example.com/product-image.jpg"
+                    disabled={!!imageFile}
                   />
+
+                  <div className="pfm-image-divider"><span>OR</span></div>
+
+                  {!imagePreview && !form.image_url ? (
+                    <label className="pfm-image-upload" htmlFor="edit-product-image-input">
+                      <ImagePlus size={22} />
+                      <span>Upload Image</span>
+                      <p>{ALLOWED_IMAGE_HINT}</p>
+                    </label>
+                  ) : (
+                    <div className="pfm-image-preview">
+                      <img
+                        src={imagePreview || form.image_url}
+                        alt="Product preview"
+                        className="pfm-image-preview-img"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                      <div className="pfm-image-preview-info">
+                        <span className="pfm-image-preview-name">
+                          <FileImage size={14} /> {imageFile ? imageFile.name : 'Current image'}
+                        </span>
+                        <div className="pfm-image-preview-actions">
+                          <button
+                            type="button"
+                            className="pfm-image-change-btn"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            Change Image
+                          </button>
+                          <button type="button" className="pfm-image-remove-btn" onClick={handleRemoveImage}>
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <input
+                    ref={fileInputRef}
+                    id="edit-product-image-input"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
+                  />
+
+                  {imageError && <span className="pfm-error-text">{imageError}</span>}
+                  {imageFile && form.image_url && !imageError && (
+                    <p className="pfm-image-priority-note">The uploaded image will be used instead of the Image URL above.</p>
+                  )}
+                  {uploadingImage && <p className="pfm-image-uploading-note">Uploading image...</p>}
                 </div>
 
                 <div className="pfm-field-row">
@@ -346,7 +490,7 @@ export default function EditProductModal({ product, isOpen, onClose, onSubmit, c
                   whileHover={!submitting && !saveSuccess ? { scale: 1.02 } : {}}
                   whileTap={!submitting && !saveSuccess ? { scale: 0.98 } : {}}
                 >
-                  {submitting ? 'Saving...' : 'Save Changes'}
+                  {uploadingImage ? 'Uploading image...' : submitting ? 'Saving...' : 'Save Changes'}
                 </motion.button>
               </div>
             </form>

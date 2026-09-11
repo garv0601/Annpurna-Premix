@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getCustomers,
   getCustomerStats,
-  getCustomerOrders,
-  getCustomerAddresses,
+  getCustomerProfile,
+  updateCustomerProfile,
   deactivateCustomer,
   activateCustomer,
+  deleteCustomer,
 } from '../services/customerService';
 
 /**
@@ -17,8 +18,8 @@ import {
  *   - Search (name, email, phone)
  *   - Status filter
  *   - Date filter (predefined ranges)
- *   - Customer detail drawer (profile + orders + addresses)
- *   - Customer deactivation / activation
+ *   - Edit-profile modal (loads the selected customer's real Profile row)
+ *   - Customer profile update (existing Profiles columns only)
  */
 export function useCustomers() {
   const [customers, setCustomers] = useState([]);
@@ -31,14 +32,11 @@ export function useCustomers() {
   const [statusFilter, setStatusFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
 
-  // Modals / Drawers
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [customerOrders, setCustomerOrders] = useState([]);
-  const [customerAddresses, setCustomerAddresses] = useState([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-
-  const [addOpen, setAddOpen] = useState(false);
+  // Edit modal
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState(null);
 
   /* ── Fetch all data ── */
   const fetchData = useCallback(async () => {
@@ -122,45 +120,49 @@ export function useCustomers() {
     });
   }, [customers, search, statusFilter, dateFilter]);
 
-  /* ── Open customer detail drawer ── */
-  const openDetail = useCallback(async (customer) => {
-    setSelectedCustomer(customer);
-    setDetailOpen(true);
-    setOrdersLoading(true);
+  /* ── Open edit-profile modal (load the customer's real Profile row) ── */
+  const openEdit = useCallback(async (customer) => {
+    setEditOpen(true);
+    setEditLoading(true);
+    setEditError(null);
+    setEditingCustomer(null);
     try {
-      const [orders, addresses] = await Promise.all([
-        getCustomerOrders(customer.id),
-        getCustomerAddresses(customer.id),
-      ]);
-      setCustomerOrders(orders);
-      setCustomerAddresses(addresses);
+      // Always fetch fresh by id so we can never show a stale record or
+      // another customer's data.
+      const profile = await getCustomerProfile(customer.id);
+      setEditingCustomer(profile);
     } catch (err) {
-      console.error("Failed to load customer details:", err);
-      setCustomerOrders([]);
-      setCustomerAddresses([]);
+      console.error('Failed to load customer profile:', err);
+      setEditError(err.message || 'Unable to load customer profile.');
     } finally {
-      setOrdersLoading(false);
+      setEditLoading(false);
     }
   }, []);
 
-  const closeDetail = useCallback(() => {
-    setDetailOpen(false);
+  const closeEdit = useCallback(() => {
+    setEditOpen(false);
     setTimeout(() => {
-      setSelectedCustomer(null);
-      setCustomerOrders([]);
-      setCustomerAddresses([]);
+      setEditingCustomer(null);
+      setEditError(null);
     }, 300);
   }, []);
 
-  /* ── Deactivate / Activate customer ── */
+  /* ── Save profile changes (existing Profiles columns only) ── */
+  const handleUpdateCustomer = useCallback(async (customerId, fields) => {
+    try {
+      await updateCustomerProfile(customerId, fields);
+      await fetchData(); // Refresh list + stats so the table reflects changes
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }, [fetchData]);
+
+  /* ── Deactivate / Activate customer (Status only) ── */
   const handleDeactivate = useCallback(async (customerId) => {
     try {
       await deactivateCustomer(customerId);
-      await fetchData(); // Refresh list and stats
-      // If the detail drawer is open for this customer, update it
-      setSelectedCustomer((prev) =>
-        prev && prev.id === customerId ? { ...prev, status: 'inactive' } : prev
-      );
+      await fetchData();
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
@@ -171,25 +173,22 @@ export function useCustomers() {
     try {
       await activateCustomer(customerId);
       await fetchData();
-      setSelectedCustomer((prev) =>
-        prev && prev.id === customerId ? { ...prev, status: 'active' } : prev
-      );
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
     }
   }, [fetchData]);
 
-  /* ── Add customer (placeholder — admin can't create auth users from frontend) ── */
-  const handleAdd = useCallback(async (formData) => {
-    // Creating a full customer requires creating an auth.users record first,
-    // which needs the service-role key (NOT safe from the frontend).
-    // For now, this returns a clear message.
-    return {
-      success: false,
-      error: 'Customer creation requires a secure backend endpoint. Customers are created when they sign up through the website.',
-    };
-  }, []);
+  /* ── Delete customer (permanent — cannot be undone) ── */
+  const handleDeleteCustomer = useCallback(async (customerId) => {
+    try {
+      await deleteCustomer(customerId);
+      await fetchData();
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }, [fetchData]);
 
   return {
     customers: filteredCustomers,
@@ -203,20 +202,17 @@ export function useCustomers() {
     setStatusFilter,
     dateFilter,
     setDateFilter,
-    
-    selectedCustomer,
-    customerOrders,
-    customerAddresses,
-    ordersLoading,
-    detailOpen,
-    openDetail,
-    closeDetail,
-    
-    addOpen,
-    setAddOpen,
-    handleAdd,
+
+    editOpen,
+    editingCustomer,
+    editLoading,
+    editError,
+    openEdit,
+    closeEdit,
+    handleUpdateCustomer,
     handleDeactivate,
     handleActivate,
+    handleDeleteCustomer,
     refreshData: fetchData,
   };
 }

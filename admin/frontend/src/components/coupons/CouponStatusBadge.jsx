@@ -18,6 +18,10 @@ export default function CouponStatusBadge({ status }) {
       className = 'cbadge-scheduled';
       label = 'Scheduled';
       break;
+    case 'inactive':
+      className = 'cbadge-inactive';
+      label = 'Inactive';
+      break;
     default:
       className = 'cbadge-inactive';
       label = 'Unknown';

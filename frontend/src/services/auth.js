@@ -76,6 +76,17 @@ export const signIn = async (email, password) => {
   return await supabase.auth.signInWithPassword({ email, password });
 };
 
+/**
+ * Send a password-reset email. The link returns the user to /reset-password
+ * with a temporary recovery session (detectSessionInUrl handles the token).
+ */
+export const resetPasswordForEmail = async (email, redirectTo) => {
+  if (credentialsMissing) return notConfigured();
+  return await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: redirectTo || `${window.location.origin}/reset-password`,
+  });
+};
+
 export const signOut = async () => {
   if (credentialsMissing) return notConfigured();
   return await supabase.auth.signOut();
@@ -119,6 +130,135 @@ export const onAuthStateChange = (callback) => {
 export const updateProfile = async (metadata) => {
   if (credentialsMissing) return notConfigured();
   return await supabase.auth.updateUser({ data: metadata });
+};
+
+// ── Security: Password ────────────────────────────────────────────────────────
+
+/**
+ * Set / change the current user's password.
+ * Uses the existing Supabase Auth session — no separate auth system.
+ * Also flags `has_password` in user_metadata so the UI can show
+ * "Set Password" vs "Change Password" (the password itself is stored
+ * only by Supabase Auth, never in metadata or any table).
+ */
+export const updatePassword = async (newPassword) => {
+  if (credentialsMissing) return notConfigured();
+  return await supabase.auth.updateUser({
+    password: newPassword,
+    data: { has_password: true },
+  });
+};
+
+// ── Security: Two-Factor Authentication (TOTP via Supabase MFA) ────────────────
+
+/**
+ * List the current user's MFA factors. A verified 'totp' factor means 2FA is on.
+ */
+export const listMfaFactors = async () => {
+  if (credentialsMissing) return { data: null, error: notConfigured().error };
+  return await supabase.auth.mfa.listFactors();
+};
+
+/**
+ * Begin TOTP enrollment. Returns a QR code + secret to display to the user.
+ */
+export const enrollTotpFactor = async () => {
+  if (credentialsMissing) return notConfigured();
+  return await supabase.auth.mfa.enroll({ factorType: 'totp' });
+};
+
+/**
+ * Verify the 6-digit code from the authenticator app to finish enrollment.
+ */
+export const verifyTotpFactor = async (factorId, code) => {
+  if (credentialsMissing) return notConfigured();
+  const { data: challenge, error: challengeError } =
+    await supabase.auth.mfa.challenge({ factorId });
+  if (challengeError) return { data: null, error: challengeError };
+  return await supabase.auth.mfa.verify({
+    factorId,
+    challengeId: challenge.id,
+    code,
+  });
+};
+
+/**
+ * Remove an MFA factor (disable 2FA).
+ */
+export const unenrollFactor = async (factorId) => {
+  if (credentialsMissing) return notConfigured();
+  return await supabase.auth.mfa.unenroll({ factorId });
+};
+
+// ── Account: Global sign-out & deletion ───────────────────────────────────────
+
+/**
+ * Sign out of every device/session for this user.
+ */
+export const signOutAllDevices = async () => {
+  if (credentialsMissing) return notConfigured();
+  return await supabase.auth.signOut({ scope: 'global' });
+};
+
+/**
+ * Permanently delete the current user's account.
+ * Account deletion requires the service-role key, so it is performed by the
+ * backend which verifies the user's JWT before calling admin.deleteUser().
+ */
+export const deleteAccount = async () => {
+  if (credentialsMissing) return { error: notConfigured().error };
+  const { data } = await supabase.auth.getSession();
+  const token = data?.session?.access_token;
+  if (!token) return { error: { message: 'Not authenticated' } };
+
+  try {
+    const res = await fetch('/api/account', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { error: { message: body.message || 'Failed to delete account' } };
+    }
+    return { error: null };
+  } catch (err) {
+    return { error: { message: err.message || 'Failed to delete account' } };
+  }
+};
+
+/**
+ * Sync editable fields onto the caller's row in the Profiles table
+ * (used by the admin dashboard). auth.updateUser() only touches
+ * user_metadata, NOT the Profiles table, so this keeps them in sync.
+ * Requires the service-role key server-side — done via the backend.
+ * Accepts any subset of: fullName, phone, avatarUrl, dateOfBirth,
+ * preferredLanguage, customLanguage, dietaryPreference, foodAllergies,
+ * spicePreference, promotionalOffers, newProductNotifications,
+ * emailNotifications, smsNotifications, whatsappNotifications.
+ */
+export const syncProfileRow = async (fields) => {
+  if (credentialsMissing) return { error: notConfigured().error };
+  const { data } = await supabase.auth.getSession();
+  const token = data?.session?.access_token;
+  if (!token) return { error: { message: 'Not authenticated' } };
+
+  try {
+    const res = await fetch('/api/account/profile', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(fields),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { error: { message: body.message || 'Failed to sync profile' } };
+    }
+    return { error: null };
+  } catch (err) {
+    return { error: { message: err.message || 'Failed to sync profile' } };
+  }
 };
 
 export const uploadProfileImage = async (userId, file) => {

@@ -1,7 +1,7 @@
 # ANNPURNA — Supabase Database Schema Reference
 
 > **Purpose:** Single source of truth for all backend and frontend development.
-> **Last Updated:** 2026-08-16
+> **Last Updated:** 2026-09-11
 > **Schema:** `public`
 
 > [!CAUTION]
@@ -16,20 +16,23 @@
 1. [Profiles](#1-profiles)
 2. [addresses](#2-addresses)
 3. [admin_activity_logs](#3-admin_activity_logs)
-4. [admin_users](#4-admin_users)
-5. [categories](#5-categories)
-6. [contact_messages](#6-contact_messages)
-7. [coupon_usage](#7-coupon_usage)
-8. [coupons](#8-coupons)
-9. [notifications](#9-notifications)
-10. [order_items](#10-order_items)
-11. [orders](#11-orders)
-12. [payments](#12-payments)
-13. [products](#13-products)
-14. [reviews](#14-reviews)
-15. [Relationship Map](#relationship-map)
-16. [Business Data Flow](#business-data-flow)
-17. [Development Rules](#development-rules)
+4. [admin_notifications](#4-admin_notifications)
+5. [admin_users](#5-admin_users)
+6. [categories](#6-categories)
+7. [contact_messages](#7-contact_messages)
+8. [coupon_usage](#8-coupon_usage)
+9. [coupons](#9-coupons)
+10. [deleted_customers](#10-deleted_customers)
+11. [inventory_reservations](#11-inventory_reservations)
+12. [notifications](#12-notifications)
+13. [order_items](#13-order_items)
+14. [orders](#14-orders)
+15. [payments](#15-payments)
+16. [products](#16-products)
+17. [reviews](#17-reviews)
+18. [Relationship Map](#relationship-map)
+19. [Business Data Flow](#business-data-flow)
+20. [Development Rules](#development-rules)
 
 ---
 
@@ -37,17 +40,28 @@
 
 > Customer/user profile data. Linked to `auth.users` via the `id` UUID.
 
-| Column       | Notes                        |
-|--------------|------------------------------|
-| `id`         | UUID (PK), matches auth.users.id |
-| `full_name`  |                              |
-| `email`      |                              |
-| `phone`      |                              |
-| `avatar_url` |                              |
-| `role`       |                              |
-| `Status`     | ⚠️ Capital 'S' in DB         |
-| `created_at` |                              |
-| `Updated_at` | ⚠️ Capital 'U' in DB         |
+| Column                       | Notes                        |
+|------------------------------|------------------------------|
+| `id`                         | UUID (PK), matches auth.users.id |
+| `full_name`                  |                              |
+| `email`                      |                              |
+| `phone`                      |                              |
+| `avatar_url`                 |                              |
+| `role`                       |                              |
+| `Status`                     | ⚠️ Capital 'S' in DB         |
+| `created_at`                 |                              |
+| `Updated_at`                 | ⚠️ Capital 'U' in DB         |
+| `date_of_birth`              | Nullable, no CHECK constraint |
+| `preferred_language`         | Nullable                    |
+| `custom_language`            | Nullable, used when `preferred_language` = 'Others' |
+| `dietary_preference`         | Nullable                    |
+| `food_allergies`             | Nullable                    |
+| `spice_preference`           | Nullable                    |
+| `promotional_offers`         | boolean, NOT NULL, DEFAULT true |
+| `new_product_notifications`  | boolean, NOT NULL, DEFAULT true |
+| `email_notifications`        | boolean, NOT NULL, DEFAULT true |
+| `sms_notifications`          | boolean, NOT NULL, DEFAULT false |
+| `whatsapp_notifications`     | boolean, NOT NULL, DEFAULT false |
 
 **Referenced by:**
 
@@ -58,6 +72,8 @@
 - `reviews.customer_id`
 - `notifications.customer_id`
 - `contact_messages.customer_id`
+- `admin_notifications.customer_id`
+- `inventory_reservations.customer_id`
 
 ---
 
@@ -114,7 +130,33 @@ ON DELETE: NO ACTION
 
 ---
 
-## 4. admin_users
+## 4. admin_notifications
+
+| Column        | Notes                          |
+|---------------|---------------------------------|
+| `id`          | PK                              |
+| `type`        |                                 |
+| `title`       |                                 |
+| `message`     |                                 |
+| `order_id`    | FK → orders.id (nullable)       |
+| `customer_id` | FK → Profiles.id (nullable)     |
+| `is_read`     |                                 |
+| `created_at`  |                                 |
+
+**Foreign Keys:**
+
+```
+admin_notifications.order_id    → orders.id
+admin_notifications.customer_id → Profiles.id
+```
+
+> [!NOTE]
+> These are internal notifications surfaced to admins (e.g. new order, new
+> contact message), distinct from `notifications`, which targets customers.
+
+---
+
+## 5. admin_users
 
 | Column       | Notes                          |
 |--------------|--------------------------------|
@@ -139,7 +181,7 @@ ON DELETE: CASCADE
 
 ---
 
-## 5. categories
+## 6. categories
 
 | Column       | Notes              |
 |--------------|--------------------|
@@ -158,7 +200,7 @@ ON DELETE: CASCADE
 
 ---
 
-## 6. contact_messages
+## 7. contact_messages
 
 | Column        | Notes                      |
 |---------------|----------------------------|
@@ -183,7 +225,7 @@ ON DELETE: SET NULL
 
 ---
 
-## 7. coupon_usage
+## 8. coupon_usage
 
 | Column           | Notes              |
 |------------------|--------------------|
@@ -204,7 +246,7 @@ coupon_usage.order_id    → orders.id
 
 ---
 
-## 8. coupons
+## 9. coupons
 
 | Column                 | Notes        |
 |------------------------|--------------|
@@ -230,7 +272,59 @@ coupon_usage.order_id    → orders.id
 
 ---
 
-## 9. notifications
+## 10. deleted_customers
+
+| Column         | Notes                                    |
+|----------------|-------------------------------------------|
+| `id`           | PK                                        |
+| `full_name`    |                                            |
+| `email`        |                                            |
+| `phone`        |                                            |
+| `role`         |                                            |
+| `status`       |                                            |
+| `registered_at`|                                            |
+| `deleted_at`   |                                            |
+
+> [!NOTE]
+> Archival/audit table only — an immutable snapshot of a `Profiles` row taken
+> at deletion time. It has no live foreign key back to `Profiles` (the source
+> row no longer exists) and nothing references it.
+
+---
+
+## 11. inventory_reservations
+
+| Column        | Notes                                       |
+|---------------|----------------------------------------------|
+| `id`          | PK                                            |
+| `session_id`  | Guest/cart session identifier                 |
+| `order_id`    | FK → orders.id (nullable)                     |
+| `customer_id` | FK → Profiles.id (nullable)                   |
+| `product_id`  | FK → products.id                              |
+| `quantity`    |                                                |
+| `status`      |                                                |
+| `expires_at`  |                                                |
+| `created_at`  |                                                |
+| `updated_at`  |                                                |
+
+**Foreign Keys:**
+
+```
+inventory_reservations.order_id    → orders.id
+inventory_reservations.customer_id → Profiles.id
+inventory_reservations.product_id  → products.id
+```
+
+> [!NOTE]
+> Holds stock temporarily against a `session_id` (guest cart) or `order_id`
+> (checkout in progress) while `status` is active, and expires via
+> `expires_at` if the order/session is never completed. `customer_id` and
+> `order_id` are nullable to support anonymous/guest reservations that
+> precede order creation.
+
+---
+
+## 12. notifications
 
 | Column        | Notes              |
 |---------------|--------------------|
@@ -252,7 +346,7 @@ notifications.order_id    → orders.id
 
 ---
 
-## 10. order_items
+## 13. order_items
 
 | Column          | Notes                              |
 |-----------------|------------------------------------|
@@ -278,7 +372,7 @@ order_items.product_id → products.id
 
 ---
 
-## 11. orders
+## 14. orders
 
 | Column             | Notes                               |
 |--------------------|-------------------------------------|
@@ -293,8 +387,8 @@ order_items.product_id → products.id
 | `coupon_id`        | FK → coupons.id                     |
 | `payment_status`   |                                     |
 | `order_status`     |                                     |
-| `shipping_addres`  | ⚠️ Exact DB spelling (no trailing 's') |
-| `notes`            |                                     |
+| `shipping_address` | Exact DB spelling (verified live)   |
+| `notes`            | ⚠️ NOT NULL — must insert `''` not `null`. **Must NOT be UNIQUE** |
 | `created_at`       |                                     |
 | `updated_at`       |                                     |
 
@@ -305,9 +399,23 @@ orders.customer_id → Profiles.id
 orders.coupon_id   → coupons.id
 ```
 
-> [!WARNING]
-> `shipping_addres` is the actual database column name (missing trailing 's').
-> Do NOT rename it without explicit approval and a coordinated migration.
+> [!NOTE]
+> The orders shipping column is `shipping_address` (with trailing 's').
+> This was verified directly against the live database schema.
+
+> [!NOTE]
+> `notes` has a NOT NULL constraint — inserting `null` fails with Postgres
+> 23502. Always insert an empty string `''` when no notes are provided.
+> Verified directly against the live database schema.
+
+> [!IMPORTANT]
+> `notes` must **NOT** be UNIQUE. Checkout does not require notes, so many
+> orders legitimately share `notes = ''` (or any repeated value), and a single
+> customer may place multiple orders. An incorrect UNIQUE constraint/index on
+> `notes` caused subsequent blank-notes orders to fail with Postgres 23505
+> (unique_violation). Removed by migration
+> `admin/20260911120000_drop_orders_notes_unique.sql`. Do not re-add any
+> uniqueness on `notes` (nor on `customer_id` / `coupon_id` / email).
 
 > [!NOTE]
 > `category_id` currently exists in the table structure.
@@ -315,7 +423,7 @@ orders.coupon_id   → coupons.id
 
 ---
 
-## 12. payments
+## 15. payments
 
 | Column            | Notes              |
 |-------------------|--------------------|
@@ -323,7 +431,7 @@ orders.coupon_id   → coupons.id
 | `order_id`        | FK → orders.id     |
 | `customer_id`     | FK → Profiles.id   |
 | `payment_provider`|                    |
-| `transaction_id`  |                    |
+| `transaction_id`  | ⚠️ NOT NULL — COD has no real txn, use a placeholder |
 | `amount`          |                    |
 | `currency`        |                    |
 | `payment_status`  |                    |
@@ -341,7 +449,7 @@ payments.customer_id → Profiles.id
 
 ---
 
-## 13. products
+## 16. products
 
 | Column              | Notes              |
 |---------------------|--------------------|
@@ -375,10 +483,11 @@ products.category_id → categories.id
 
 - `order_items.product_id`
 - `reviews.product_id`
+- `inventory_reservations.product_id`
 
 ---
 
-## 14. reviews
+## 17. reviews
 
 | Column        | Notes              |
 |---------------|--------------------|
@@ -417,21 +526,32 @@ graph TD
     P --> REV["reviews"]
     P --> NOTIF["notifications"]
     P --> CM["contact_messages"]
+    P --> AN["admin_notifications"]
+    P --> IR["inventory_reservations"]
 
     CAT["categories"] --> PROD["products"]
 
     PROD --> OI["order_items"]
     PROD --> REV
+    PROD --> IR
 
     ORD --> OI
     ORD --> PAY
     ORD --> CU
     ORD --> REV
     ORD --> NOTIF
+    ORD --> AN
+    ORD --> IR
 
     COUP["coupons"] --> ORD
     COUP --> CU
+
+    DC["deleted_customers"]
 ```
+
+> [!NOTE]
+> `deleted_customers` is a standalone archival snapshot table — it has no
+> live foreign-key relationships (see [deleted_customers](#10-deleted_customers)).
 
 **Text representation:**
 
@@ -443,21 +563,26 @@ Profiles
 ├── coupon_usage.customer_id
 ├── reviews.customer_id
 ├── notifications.customer_id
-└── contact_messages.customer_id
+├── contact_messages.customer_id
+├── admin_notifications.customer_id
+└── inventory_reservations.customer_id
 
 categories
 └── products.category_id
 
 products
 ├── order_items.product_id
-└── reviews.product_id
+├── reviews.product_id
+└── inventory_reservations.product_id
 
 orders
 ├── order_items.order_id
 ├── payments.order_id
 ├── coupon_usage.order_id
 ├── reviews.order_id
-└── notifications.order_id
+├── notifications.order_id
+├── admin_notifications.order_id
+└── inventory_reservations.order_id
 
 coupons
 ├── orders.coupon_id
@@ -466,6 +591,9 @@ coupons
 admin_users
 ├── admin_activity_logs.admin_id
 └── user_id → auth.users.id
+
+deleted_customers
+└── (standalone archive table; no live FK relationships)
 ```
 
 ---
@@ -500,6 +628,17 @@ Profiles → reviews → products → orders
 ### Admin
 ```
 auth.users → admin_users → admin_activity_logs
+orders/contact_messages → admin_notifications → admin dashboard
+```
+
+### Inventory
+```
+products → inventory_reservations → orders
+```
+
+### Customer Deletion Archive
+```
+Profiles (on delete) → deleted_customers (immutable snapshot)
 ```
 
 ---
@@ -510,7 +649,7 @@ auth.users → admin_users → admin_activity_logs
 > These rules apply to ALL future backend and frontend development.
 
 1. **Use existing table names** exactly as documented above.
-2. **Use existing column names** exactly — note case sensitivity (`Status`, `Updated_at`, `shipping_addres`).
+2. **Use existing column names** exactly — note case sensitivity (`Status`, `Updated_at`).
 3. **Use existing foreign-key relationships** — do not invent new ones without approval.
 4. **Do not create duplicate tables** for products, orders, customers, etc.
 5. **Do not create duplicate data structures** in the frontend that diverge from this schema.
@@ -520,7 +659,6 @@ auth.users → admin_users → admin_activity_logs
 9. **Never expose the Supabase service-role key** in any frontend code (customer or admin).
 10. **Admin write operations** must be protected by proper Supabase Auth + RLS using the `is_admin()` function.
 11. **Order item snapshots** (`product_name`, `product_price`) must never be overwritten with current product data.
-12. **The `shipping_addres` typo** is a known issue — do not fix it without a coordinated migration.
 
 ---
 

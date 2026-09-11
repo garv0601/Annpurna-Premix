@@ -221,51 +221,47 @@ export default function Hero({ onExploreClick }) {
             <DotPattern />
           </div>
 
-          {/* Accent Ring */}
+          {/* Food Image — emerges softly from the section above; solid natural bottom */}
           <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              width: '100%',
-              maxWidth: '460px',
-              height: '100%',
-              borderRadius: '50% 50% 40% 60% / 50% 40% 60% 50%',
-              border: '2px solid rgba(255, 195, 0, 0.3)',
-              top: '10px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 0,
-              pointerEvents: 'none',
-            }}
-          />
-
-          {/* Food Image */}
-          <div
+            id="hero-food-frame"
             style={{
               position: 'relative',
               zIndex: 1,
               width: '100%',
-              maxWidth: '500px',
-              borderRadius: '50% 48% 52% 48% / 46% 52% 48% 54%',
+              maxWidth: '460px',
+              aspectRatio: '4 / 5',
+              borderRadius: '0',
               overflow: 'hidden',
-              aspectRatio: '1 / 1',
-              boxShadow: '0 20px 60px rgba(93, 64, 55, 0.2), 0 6px 18px rgba(93, 64, 55, 0.12)',
+              
             }}
           >
             <img
+              id="hero-food-image"
               src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=700&q=85&auto=format&fit=crop"
               alt="Authentic Indian thali spread with dals, rice and freshly made rotis — homemade warmth"
               style={{
+                display: 'block',
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                objectPosition: 'center',
+                objectPosition: 'center 38%',
+                // Long, gradual top fade so the photo emerges out of the page
+                // above (feels connected, not a separate box). Bottom stays solid.
+                WebkitMaskImage:
+  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.25) 6%, black 22%, black 100%)',
+maskImage:
+  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.25) 6%, black 22%, black 100%)',
+                WebkitMaskSize: '100% 100%',
+                maskSize: '100% 100%',
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
               }}
             />
           </div>
 
           {/* Floating badge */}
           <div
+            id="hero-badge"
             style={{
               position: 'absolute',
               bottom: '16px',
@@ -312,12 +308,41 @@ export default function Hero({ onExploreClick }) {
 
       {/* Hero responsive layout */}
       <style>{`
+        @media (max-width: 899px) {
+          /* Let the hero image bleed to the screen edges — no boxed/gap feel */
+          #hero-image-col {
+            margin-left: calc(-1 * var(--container-pad)) !important;
+            margin-right: calc(-1 * var(--container-pad)) !important;
+            margin-top: -50px !important;
+            width: auto !important;
+          }
+          #hero-food-frame {
+            width: 100% !important;
+            height: 600px !important;
+            max-width: none !important;
+            border-radius: 0 !important;
+          }
+          #hero-badge {
+            left: var(--container-pad) !important;
+          }
+        }
         @media (min-width: 900px) {
           #hero-grid {
             grid-template-columns: 1fr 1fr !important;
           }
           #hero-image-col {
             justify-content: flex-end !important;
+          }
+          #hero-food-frame {
+            aspect-ratio: 1 / 1 !important;
+            max-width: 500px !important;
+            border-radius: 28px !important;
+    overflow: hidden !important;
+          }
+          /* Desktop: clean, fully solid image — no top-fade/emerge effect */
+          #hero-food-image {
+            -webkit-mask-image: none !important;
+            mask-image: none !important;
           }
         }
       `}</style>

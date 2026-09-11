@@ -134,4 +134,13 @@
   .sales-overview-header h3 {
     font-size: 15px;
   }
+
+  .sales-overview-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .sales-legend {
+    gap: 14px;
+  }
 }

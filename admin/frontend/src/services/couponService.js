@@ -1,124 +1,141 @@
 /**
- * MOCK COUPON SERVICE
- * Temporary local data store for coupons.
+ * COUPON SERVICE — Real Supabase Integration
+ *
+ * Connects the Admin Coupons page to the actual `public.coupons` table.
+ *
+ * IMPORTANT — real column names (see admin/DATABASE_SCHEMA.md §8):
+ *   minimum_order_amount, maximum_discount, used_count, starts_at,
+ *   expires_at, is_active (boolean). There is NO "status" column —
+ *   status (active/inactive/expired/scheduled) is derived client-side
+ *   from is_active + starts_at + expires_at.
+ *
+ * RLS: reads/writes require an authenticated admin (is_admin() policy).
  */
 
-let MOCK_COUPONS = [
-  {
-    id: 'coup_1',
-    code: 'WELCOME20',
-    discount_type: 'percentage',
-    discount_value: 20,
-    min_order_amount: 500,
-    max_discount: 200,
-    usage_limit: 100,
-    usage_count: 45,
-    start_date: '2024-01-01T00:00:00Z',
-    expiry_date: '2025-10-31T23:59:59Z',
-    status: 'active',
-    created_at: '2024-01-01T00:00:00Z',
-  },
-  {
-    id: 'coup_2',
-    code: 'FIRSTORDER',
-    discount_type: 'fixed',
-    discount_value: 50,
-    min_order_amount: 300,
-    max_discount: 50,
-    usage_limit: null, // Unlimited
-    usage_count: 1204,
-    start_date: '2024-02-01T00:00:00Z',
-    expiry_date: null,
-    status: 'active',
-    created_at: '2024-02-01T00:00:00Z',
-  },
-  {
-    id: 'coup_3',
-    code: 'SUMMERREFRESH',
-    discount_type: 'percentage',
-    discount_value: 15,
-    min_order_amount: 600,
-    max_discount: 150,
-    usage_limit: 200,
-    usage_count: 200,
-    start_date: '2024-06-01T00:00:00Z',
-    expiry_date: '2024-08-31T23:59:59Z',
-    status: 'expired',
-    created_at: '2024-05-15T00:00:00Z',
-  },
-  {
-    id: 'coup_4',
-    code: 'DIWALI500',
-    discount_type: 'fixed',
-    discount_value: 500,
-    min_order_amount: 2500,
-    max_discount: 500,
-    usage_limit: 50,
-    usage_count: 0,
-    start_date: '2024-11-01T00:00:00Z',
-    expiry_date: '2024-11-15T23:59:59Z',
-    status: 'scheduled',
-    created_at: '2024-10-01T00:00:00Z',
-  }
-];
+import { supabase } from '../lib/supabase';
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+/* ══════════════════════════════════════════════════════════════
+   HELPERS
+   ══════════════════════════════════════════════════════════════ */
+
+function computeStatus(row) {
+  if (!row.is_active) return 'inactive';
+  const now = new Date();
+  if (row.expires_at && new Date(row.expires_at) < now) return 'expired';
+  if (row.starts_at && new Date(row.starts_at) > now) return 'scheduled';
+  return 'active';
+}
+
+function enrichCoupon(row) {
+  return {
+    ...row,
+    used_count: row.used_count ?? 0,
+    minimum_order_amount: row.minimum_order_amount ?? 0,
+    status: computeStatus(row),
+  };
+}
+
+function toDbPayload(formData) {
+  return {
+    code: formData.code.trim().toUpperCase(),
+    discount_type: formData.discount_type,
+    discount_value: Number(formData.discount_value),
+    minimum_order_amount: formData.minimum_order_amount ? Number(formData.minimum_order_amount) : 0,
+    maximum_discount: formData.maximum_discount ? Number(formData.maximum_discount) : null,
+    usage_limit: formData.usage_limit ? Number(formData.usage_limit) : null,
+    starts_at: formData.starts_at || null,
+    expires_at: formData.expires_at || null,
+    is_active: formData.is_active !== undefined ? !!formData.is_active : true,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FETCH
+   ══════════════════════════════════════════════════════════════ */
 
 export async function getCoupons() {
-  await delay(400);
-  return [...MOCK_COUPONS];
+  const { data, error } = await supabase
+    .from('coupons')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('[couponService] getCoupons error:', error);
+    throw new Error('Failed to fetch coupons');
+  }
+  return (data || []).map(enrichCoupon);
 }
 
 export async function getCouponStats() {
-  await delay(300);
-  const activeCount = MOCK_COUPONS.filter(c => c.status === 'active').length;
-  // Mock expiring soon as any active coupon with an expiry date
-  const expiringSoon = MOCK_COUPONS.filter(c => c.status === 'active' && c.expiry_date).length;
-  const totalUsage = MOCK_COUPONS.reduce((sum, c) => sum + c.usage_count, 0);
-  
+  const coupons = await getCoupons();
+  const activeCount = coupons.filter((c) => c.status === 'active').length;
+  const expiringSoon = coupons.filter((c) => {
+    if (c.status !== 'active' || !c.expires_at) return false;
+    const daysLeft = (new Date(c.expires_at) - new Date()) / 86400000;
+    return daysLeft <= 7;
+  }).length;
+  const totalUsage = coupons.reduce((sum, c) => sum + (c.used_count || 0), 0);
+
   return {
-    total_coupons: MOCK_COUPONS.length,
+    total_coupons: coupons.length,
     active_coupons: activeCount,
     expiring_soon: expiringSoon,
     total_usage: totalUsage,
   };
 }
 
-export async function createCoupon(data) {
-  await delay(500);
-  const newCoupon = {
-    id: `coup_${Math.floor(Math.random() * 10000)}`,
-    code: data.code.toUpperCase(),
-    discount_type: data.discount_type,
-    discount_value: Number(data.discount_value),
-    min_order_amount: data.min_order_amount ? Number(data.min_order_amount) : null,
-    max_discount: data.max_discount ? Number(data.max_discount) : null,
-    usage_limit: data.usage_limit ? Number(data.usage_limit) : null,
-    usage_count: 0,
-    start_date: data.start_date || null,
-    expiry_date: data.expiry_date || null,
-    status: data.status || 'active',
-    created_at: new Date().toISOString(),
-  };
-  
-  MOCK_COUPONS.unshift(newCoupon);
-  return newCoupon;
+/* ══════════════════════════════════════════════════════════════
+   WRITE
+   ══════════════════════════════════════════════════════════════ */
+
+export async function createCoupon(formData) {
+  const payload = toDbPayload(formData);
+  const { data, error } = await supabase
+    .from('coupons')
+    .insert(payload)
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('[couponService] createCoupon error:', error);
+    if (error.code === '23505') throw new Error('A coupon with this code already exists');
+    throw new Error(error.message || 'Failed to create coupon');
+  }
+  return enrichCoupon(data);
 }
 
-export async function updateCoupon(id, data) {
-  await delay(500);
-  const index = MOCK_COUPONS.findIndex(c => c.id === id);
-  if (index === -1) throw new Error('Coupon not found');
-  
-  MOCK_COUPONS[index] = {
-    ...MOCK_COUPONS[index],
-    ...data,
-    code: data.code ? data.code.toUpperCase() : MOCK_COUPONS[index].code,
-    discount_value: data.discount_value !== undefined ? Number(data.discount_value) : MOCK_COUPONS[index].discount_value,
-    min_order_amount: data.min_order_amount !== undefined ? (data.min_order_amount ? Number(data.min_order_amount) : null) : MOCK_COUPONS[index].min_order_amount,
-    max_discount: data.max_discount !== undefined ? (data.max_discount ? Number(data.max_discount) : null) : MOCK_COUPONS[index].max_discount,
-    usage_limit: data.usage_limit !== undefined ? (data.usage_limit ? Number(data.usage_limit) : null) : MOCK_COUPONS[index].usage_limit,
-  };
-  
-  return MOCK_COUPONS[index];
+export async function updateCoupon(id, formData) {
+  const payload = toDbPayload(formData);
+  const { data, error } = await supabase
+    .from('coupons')
+    .update(payload)
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('[couponService] updateCoupon error:', error);
+    if (error.code === '23505') throw new Error('A coupon with this code already exists');
+    throw new Error(error.message || 'Failed to update coupon');
+  }
+  return enrichCoupon(data);
+}
+
+/**
+ * "Delete" = deactivate (is_active = false).
+ * coupons.id is referenced by orders.coupon_id and coupon_usage.coupon_id,
+ * so hard-deleting would break historical order records. Deactivating
+ * preserves order history while immediately stopping further use.
+ */
+export async function deleteCoupon(id) {
+  const { error } = await supabase
+    .from('coupons')
+    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .eq('id', id);
+
+  if (error) {
+    console.error('[couponService] deleteCoupon error:', error);
+    throw new Error(error.message || 'Failed to delete coupon');
+  }
 }

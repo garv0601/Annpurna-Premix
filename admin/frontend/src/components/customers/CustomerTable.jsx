@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Users, Phone, Mail } from 'lucide-react';
+import { Pencil, MoreVertical, Users, Phone, Mail } from 'lucide-react';
 import CustomerStatusBadge from './CustomerStatusBadge';
 import './CustomerTable.css';
 
@@ -19,7 +19,7 @@ function getInitials(first, last) {
  * Customer Table — desktop view with mobile card fallback.
  * Compatible with both full_name and first_name/last_name structures.
  */
-export default function CustomerTable({ customers, onView }) {
+export default function CustomerTable({ customers, onEdit }) {
   if (!customers || customers.length === 0) {
     return (
       <div className="ctable-empty">
@@ -44,9 +44,10 @@ export default function CustomerTable({ customers, onView }) {
             <tr>
               <th>Customer</th>
               <th>Contact</th>
-              <th>Total Orders</th>
+              <th>Orders</th>
               <th>Total Spent</th>
               <th>Last Order</th>
+              <th>Joined</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
@@ -90,18 +91,21 @@ export default function CustomerTable({ customers, onView }) {
                     <span className="ctable-date">{formatDate(cust.last_order_date)}</span>
                   </td>
                   <td>
+                    <span className="ctable-date">{formatDate(cust.created_at)}</span>
+                  </td>
+                  <td>
                     <CustomerStatusBadge status={cust.status} />
                   </td>
                   <td>
                     <motion.button
                       className="ctable-action-btn"
-                      onClick={() => onView(cust)}
-                      aria-label={`View ${displayName}`}
-                      title="View Details"
+                      onClick={() => onEdit(cust)}
+                      aria-label={`Edit ${displayName}`}
+                      title="Edit Profile"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Eye size={16} strokeWidth={2} />
+                      <Pencil size={16} strokeWidth={2} />
                     </motion.button>
                   </td>
                 </motion.tr>
@@ -116,6 +120,9 @@ export default function CustomerTable({ customers, onView }) {
         {customers.map((cust, idx) => {
           const displayName = cust.full_name || `${cust.first_name || ''} ${cust.last_name || ''}`.trim();
           const totalSpent = Number(cust.total_spent) || 0;
+          const footerText = cust.last_order_date
+            ? `Last order · ${formatDate(cust.last_order_date)}`
+            : `Joined · ${formatDate(cust.created_at)}`;
           return (
             <motion.div
               key={cust.id}
@@ -133,21 +140,30 @@ export default function CustomerTable({ customers, onView }) {
                       <span>{getInitials(cust.first_name, cust.last_name)}</span>
                     )}
                   </div>
-                  <div className="cmc-name-col">
-                    <span className="ctable-name">{displayName}</span>
-                    <CustomerStatusBadge status={cust.status} />
-                  </div>
+                  <span className="ctable-name">{displayName}</span>
                 </div>
+                <motion.button
+                  className="cmc-kebab-btn"
+                  onClick={() => onEdit(cust)}
+                  aria-label={`Edit ${displayName}`}
+                  title="Edit Profile"
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.92 }}
+                >
+                  <MoreVertical size={18} strokeWidth={2} />
+                </motion.button>
               </div>
 
               <div className="cmc-body">
                 <div className="cmc-contact-row">
-                  <Mail size={13} /> {cust.email || '—'}
+                  <Mail size={13} /> <span className="cmc-contact-text">{cust.email || '—'}</span>
                 </div>
-                <div className="cmc-contact-row">
-                  <Phone size={13} /> {cust.phone || '—'}
-                </div>
-                
+                {cust.phone && (
+                  <div className="cmc-contact-row">
+                    <Phone size={13} /> <span className="cmc-contact-text">{cust.phone}</span>
+                  </div>
+                )}
+
                 <div className="cmc-metrics-grid">
                   <div className="cmc-metric">
                     <span className="cmc-label">Orders</span>
@@ -155,23 +171,17 @@ export default function CustomerTable({ customers, onView }) {
                   </div>
                   <div className="cmc-metric">
                     <span className="cmc-label">Spent</span>
-                    <span className="cmc-value">₹{totalSpent.toLocaleString()}</span>
+                    <span className="cmc-value">₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                   <div className="cmc-metric">
-                    <span className="cmc-label">Last Order</span>
-                    <span className="cmc-value">{formatDate(cust.last_order_date)}</span>
+                    <span className="cmc-label">Status</span>
+                    <CustomerStatusBadge status={cust.status} />
                   </div>
                 </div>
               </div>
 
               <div className="cmc-footer">
-                <motion.button
-                  className="cmc-view-btn"
-                  onClick={() => onView(cust)}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <Eye size={14} /> View Details
-                </motion.button>
+                <span className="cmc-footer-text">{footerText}</span>
               </div>
             </motion.div>
           );

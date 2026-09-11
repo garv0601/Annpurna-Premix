@@ -19,13 +19,19 @@ const STATUS_CONFIG = {
 /**
  * Reusable order status pill badge.
  */
-export default function OrderStatusBadge({ status }) {
+export default function OrderStatusBadge({ status, onClick, ariaLabel }) {
   const config = STATUS_CONFIG[status] || { label: status, className: '' };
+  const Component = onClick ? 'button' : 'span';
 
   return (
-    <span className={`order-badge ${config.className}`}>
+    <Component
+      className={`order-badge ${onClick ? 'order-badge-clickable' : ''} ${config.className}`}
+      onClick={onClick}
+      type={onClick ? 'button' : undefined}
+      aria-label={ariaLabel}
+    >
       <span className="order-badge-dot" />
       {config.label}
-    </span>
+    </Component>
   );
 }

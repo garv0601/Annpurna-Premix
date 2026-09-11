@@ -82,7 +82,11 @@ export default function OrdersTable({
                   </span>
                 </td>
                 <td>
-                  <OrderStatusBadge status={order.status} />
+                  <OrderStatusBadge
+                    status={order.status}
+                    onClick={() => onViewOrder(order.id)}
+                    ariaLabel={`View order ${order.orderId} details and update status`}
+                  />
                 </td>
                 <td>
                   <motion.button
@@ -121,7 +125,11 @@ export default function OrdersTable({
           >
             <div className="omc-top">
               <span className="otable-order-id">{order.orderId}</span>
-              <OrderStatusBadge status={order.status} />
+              <OrderStatusBadge
+                status={order.status}
+                onClick={() => onViewOrder(order.id)}
+                ariaLabel={`View order ${order.orderId} details and update status`}
+              />
             </div>
             <div className="omc-body">
               <div className="omc-row">

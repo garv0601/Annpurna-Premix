@@ -14,12 +14,12 @@ export default function EditCouponModal({ coupon, isOpen, onClose, onSubmit }) {
     code: '',
     discount_type: 'percentage',
     discount_value: '',
-    min_order_amount: '',
-    max_discount: '',
+    minimum_order_amount: '',
+    maximum_discount: '',
     usage_limit: '',
-    start_date: '',
-    expiry_date: '',
-    status: 'active',
+    starts_at: '',
+    expires_at: '',
+    is_active: true,
   });
   
   const [submitting, setSubmitting] = useState(false);
@@ -32,12 +32,12 @@ export default function EditCouponModal({ coupon, isOpen, onClose, onSubmit }) {
         code: coupon.code,
         discount_type: coupon.discount_type,
         discount_value: coupon.discount_value,
-        min_order_amount: coupon.min_order_amount || '',
-        max_discount: coupon.max_discount || '',
+        minimum_order_amount: coupon.minimum_order_amount || '',
+        maximum_discount: coupon.maximum_discount || '',
         usage_limit: coupon.usage_limit || '',
-        start_date: coupon.start_date ? coupon.start_date.split('T')[0] : '',
-        expiry_date: coupon.expiry_date ? coupon.expiry_date.split('T')[0] : '',
-        status: coupon.status,
+        starts_at: coupon.starts_at ? coupon.starts_at.split('T')[0] : '',
+        expires_at: coupon.expires_at ? coupon.expires_at.split('T')[0] : '',
+        is_active: coupon.is_active !== false,
       });
       setErrors({});
       setSaveSuccess(false);
@@ -66,8 +66,8 @@ export default function EditCouponModal({ coupon, isOpen, onClose, onSubmit }) {
     
     const result = await onSubmit(coupon.id, {
       ...form,
-      start_date: form.start_date ? new Date(form.start_date).toISOString() : null,
-      expiry_date: form.expiry_date ? new Date(form.expiry_date).toISOString() : null,
+      starts_at: form.starts_at ? new Date(form.starts_at).toISOString() : null,
+      expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
     });
     
     setSubmitting(false);
@@ -101,10 +101,9 @@ export default function EditCouponModal({ coupon, isOpen, onClose, onSubmit }) {
                   </div>
                   <div className="cpm-field">
                     <label className="cpm-label">Status</label>
-                    <select className="cpm-select" value={form.status} onChange={(e) => handleChange('status', e.target.value)}>
+                    <select className="cpm-select" value={form.is_active ? 'active' : 'inactive'} onChange={(e) => handleChange('is_active', e.target.value === 'active')}>
                       <option value="active">Active</option>
-                      <option value="expired">Expired</option>
-                      <option value="scheduled">Scheduled</option>
+                      <option value="inactive">Inactive</option>
                     </select>
                   </div>
                 </div>
@@ -127,11 +126,11 @@ export default function EditCouponModal({ coupon, isOpen, onClose, onSubmit }) {
                 <div className="cpm-field-row">
                   <div className="cpm-field">
                     <label className="cpm-label">Min Order Amount</label>
-                    <input className="cpm-input" type="number" min="0" value={form.min_order_amount} onChange={(e) => handleChange('min_order_amount', e.target.value)} />
+                    <input className="cpm-input" type="number" min="0" value={form.minimum_order_amount} onChange={(e) => handleChange('minimum_order_amount', e.target.value)} />
                   </div>
                   <div className="cpm-field">
                     <label className="cpm-label">Max Discount</label>
-                    <input className="cpm-input" type="number" min="0" value={form.max_discount} onChange={(e) => handleChange('max_discount', e.target.value)} disabled={form.discount_type === 'fixed'} />
+                    <input className="cpm-input" type="number" min="0" value={form.maximum_discount} onChange={(e) => handleChange('maximum_discount', e.target.value)} disabled={form.discount_type === 'fixed'} />
                   </div>
                 </div>
 
@@ -145,11 +144,11 @@ export default function EditCouponModal({ coupon, isOpen, onClose, onSubmit }) {
                 <div className="cpm-field-row">
                   <div className="cpm-field">
                     <label className="cpm-label">Start Date</label>
-                    <input className="cpm-input" type="date" value={form.start_date} onChange={(e) => handleChange('start_date', e.target.value)} />
+                    <input className="cpm-input" type="date" value={form.starts_at} onChange={(e) => handleChange('starts_at', e.target.value)} />
                   </div>
                   <div className="cpm-field">
                     <label className="cpm-label">Expiry Date</label>
-                    <input className="cpm-input" type="date" value={form.expiry_date} onChange={(e) => handleChange('expiry_date', e.target.value)} />
+                    <input className="cpm-input" type="date" value={form.expires_at} onChange={(e) => handleChange('expires_at', e.target.value)} />
                   </div>
                 </div>
               </div>

@@ -26,6 +26,7 @@ export default function StatCard({ icon, iconBg, label, value, trend, trendType,
       {trend && (
         <div className={`stat-card-trend ${trendType || ''}`}>
           {trendType === 'up' && <span className="trend-arrow">↗</span>}
+          {trendType === 'down' && <span className="trend-arrow">↘</span>}
           {trendType === 'steady' && <span className="trend-arrow">→</span>}
           {trendType === 'warning' && <span className="trend-arrow">▲</span>}
           <span className="trend-text">{trend}</span>

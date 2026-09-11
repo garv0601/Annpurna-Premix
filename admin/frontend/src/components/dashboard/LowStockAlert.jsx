@@ -2,11 +2,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 import './LowStockAlert.css';
+import { useNavigate } from 'react-router-dom';
+
 
 /**
  * Yellow alert card for low-stock products.
  */
 export default function LowStockAlert({ products }) {
+  const navigate = useNavigate();
+
   if (!products || products.length === 0) return null;
 
   return (
@@ -39,6 +43,7 @@ export default function LowStockAlert({ products }) {
         className="low-stock-btn"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
+         onClick={() => navigate('/admin/products')}
       >
         Update Inventory
       </motion.button>

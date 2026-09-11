@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { getCoupons, getCouponStats, createCoupon, updateCoupon } from '../services/couponService';
+import { getCoupons, getCouponStats, createCoupon, updateCoupon, deleteCoupon } from '../services/couponService';
 
 export function useCoupons() {
   const [coupons, setCoupons] = useState([]);
@@ -72,6 +72,16 @@ export function useCoupons() {
     }
   }, [fetchData]);
 
+  const handleDelete = useCallback(async (id) => {
+    try {
+      await deleteCoupon(id);
+      await fetchData();
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }, [fetchData]);
+
   return {
     coupons: filteredCoupons,
     stats,
@@ -84,5 +94,6 @@ export function useCoupons() {
 
     addOpen, setAddOpen, handleAdd,
     editOpen, couponToEdit, openEdit, closeEdit, handleEdit,
+    handleDelete,
   };
 }

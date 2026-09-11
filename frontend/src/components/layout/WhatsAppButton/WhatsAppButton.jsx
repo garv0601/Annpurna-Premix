@@ -4,11 +4,13 @@ import { MessageCircle } from 'lucide-react';
 
 const WA_HREF = 'https://wa.me/918209042370';
 
-export default function WhatsAppButton() {
+export default function WhatsAppButton({ hideTooltipOnMobile = false }) {
   const shouldReduce = useReducedMotion();
 
   return (
     <div
+      id="wa-float"
+      className={hideTooltipOnMobile ? 'wa-float-compact' : ''}
       style={{
         position: 'fixed',
         bottom: 'clamp(20px, 3vw, 30px)',
@@ -16,9 +18,20 @@ export default function WhatsAppButton() {
         zIndex: 1100,
       }}
     >
+      {hideTooltipOnMobile && (
+        // Scoped, mobile-only: the "Need help?" chip and the button crowd each
+        // other on narrow screens, so the redundant chip is hidden there while
+        // the button (with its own accessible label) still works everywhere.
+        <style>{`
+          @media (max-width: 480px) {
+            .wa-float-compact .wa-tooltip { display: none; }
+          }
+        `}</style>
+      )}
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '10px' }}>
         {/* Tooltip */}
         <span
+          className="wa-tooltip"
           aria-hidden="true"
           style={{
             fontFamily: "'Be Vietnam Pro', sans-serif",

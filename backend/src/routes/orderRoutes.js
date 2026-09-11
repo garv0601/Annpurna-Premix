@@ -22,7 +22,12 @@ import {
   adminGetOrderStats,
   adminGetOrders,
   adminGetOrderDetails,
+  adminUpdateOrderStatus,
+  adminGetDashboardOverview,
+  adminGetWeeklySales,
+  adminGetTopSellingProducts,
 } from '../controllers/orderController.js';
+import { requireAdmin } from '../middleware/requireAdmin.js';
 
 export const orderRouter      = Router();
 export const adminOrderRouter = Router();
@@ -34,6 +39,11 @@ orderRouter.get('/',                       getMyOrders);
 orderRouter.get('/:orderId',               getMyOrder);
 
 // ── Admin routes ─────────────────────────────────────────────────────────────
+adminOrderRouter.use(requireAdmin);
 adminOrderRouter.get('/stats',      adminGetOrderStats);
+adminOrderRouter.get('/dashboard/overview',     adminGetDashboardOverview);
+adminOrderRouter.get('/dashboard/weekly-sales', adminGetWeeklySales);
+adminOrderRouter.get('/dashboard/top-selling',  adminGetTopSellingProducts);
 adminOrderRouter.get('/',           adminGetOrders);
+adminOrderRouter.patch('/:orderId/status', adminUpdateOrderStatus);
 adminOrderRouter.get('/:orderId',   adminGetOrderDetails);

@@ -2,21 +2,33 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { X, Lock, Lightbulb } from 'lucide-react';
+import CouponCelebration from '../../components/common/CouponCelebration';
+import { calculateShippingCharge, calculateOrderTotal } from '../../utils/pricing';
 import './CartPage.css';
 
-export default function CartPage({ cart }) {
+export default function CartPage({ cart, coupon }) {
   const { cartItems, updateQuantity, removeFromCart, subtotal } = cart;
   const navigate = useNavigate();
-  const [coupon, setCoupon] = useState('');
-  const [discount] = useState(0); // Static for now as requested
-  const shipping = cartItems.length > 0 ? 40 : 0; // Standard shipping example
-  const total = subtotal + shipping - discount;
+  const [couponInput, setCouponInput] = useState('');
+  const [celebration, setCelebration] = useState({ show: false, amount: 0 });
+  const appliedCoupon = coupon?.appliedCoupon || null;
+  const discount = appliedCoupon?.discountAmount || 0;
+  // Cart always quotes Standard Delivery — same rule/state used on Checkout.
+  const shipping = cartItems.length > 0 ? calculateShippingCharge(subtotal, 'standard') : 0;
+  const total = calculateOrderTotal({ subtotal, shipping, discount });
 
-  const handleApplyCoupon = () => {
-    // UI only, logic to be added later
-    if (coupon.trim()) {
-      alert(`Coupon ${coupon} applied! (Simulation)`);
+  const handleApplyCoupon = async () => {
+    if (!coupon) return;
+    const result = await coupon.applyCoupon(couponInput, subtotal);
+    if (result.success) {
+      setCouponInput('');
+      setCelebration({ show: true, amount: result.result?.discountAmount || 0 });
     }
+  };
+
+  const handleRemoveCoupon = () => {
+    coupon?.removeCoupon();
+    setCouponInput('');
   };
 
   const containerVariants = {
@@ -123,6 +135,11 @@ export default function CartPage({ cart }) {
         {/* Right Column: Order Summary */}
         <div className="cart-right">
           <motion.div variants={itemVariants} className="order-summary-card">
+            <CouponCelebration
+              show={celebration.show}
+              amount={celebration.amount}
+              onDone={() => setCelebration((c) => ({ ...c, show: false }))}
+            />
             <h2 className="summary-title">Order Summary</h2>
             
             <div className="summary-row">
@@ -131,10 +148,10 @@ export default function CartPage({ cart }) {
             </div>
             <div className="summary-row">
               <span className="summary-label">Shipping (Standard)</span>
-              <span className="summary-value">₹{shipping.toLocaleString('en-IN')}</span>
+              <span className="summary-value">{shipping === 0 ? 'Free' : `₹${shipping.toLocaleString('en-IN')}`}</span>
             </div>
             <div className="summary-row discount-row">
-              <span className="summary-label">Discount</span>
+              <span className="summary-label">Discount{appliedCoupon ? ` (${appliedCoupon.code})` : ''}</span>
               <span className="summary-value">-₹{discount.toLocaleString('en-IN')}</span>
             </div>
 
@@ -147,15 +164,29 @@ export default function CartPage({ cart }) {
             </div>
 
             <div className="coupon-section">
-              <input 
-                type="text" 
-                placeholder="Coupon code" 
-                className="coupon-input"
-                value={coupon}
-                onChange={(e) => setCoupon(e.target.value)}
-              />
-              <button className="coupon-apply-btn" onClick={handleApplyCoupon}>Apply</button>
+              {appliedCoupon ? (
+                <>
+                  <span className="coupon-input" style={{ display: 'flex', alignItems: 'center' }}>
+                    ✓ {appliedCoupon.code} applied
+                  </span>
+                  <button className="coupon-apply-btn" onClick={handleRemoveCoupon}>Remove</button>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Coupon code"
+                    className="coupon-input"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                  />
+                  <button className="coupon-apply-btn" onClick={handleApplyCoupon} disabled={coupon?.applying}>
+                    {coupon?.applying ? 'Applying…' : 'Apply'}
+                  </button>
+                </>
+              )}
             </div>
+            {coupon?.error && <p className="coupon-error-msg" style={{ color: '#B22222', fontSize: '13px', margin: '-8px 0 12px' }}>{coupon.error}</p>}
 
             <button 
               className="checkout-btn"

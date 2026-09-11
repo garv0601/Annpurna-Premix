@@ -20,6 +20,7 @@ export default function Coupons() {
     typeFilter, setTypeFilter,
     addOpen, setAddOpen, handleAdd,
     editOpen, couponToEdit, openEdit, closeEdit, handleEdit,
+    handleDelete,
   } = useCoupons();
 
   if (loading && coupons.length === 0) {
@@ -78,6 +79,7 @@ export default function Coupons() {
       <CouponTable
         coupons={coupons}
         onEdit={openEdit}
+        onDelete={handleDelete}
       />
 
       <AddCouponModal

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { onAuthStateChange } from '../services/auth';
 
 export const useCart = () => {
   const [cartItems, setCartItems] = useState(() => {
@@ -17,6 +18,17 @@ export const useCart = () => {
       console.error('Failed to save cart to localStorage', e);
     }
   }, [cartItems]);
+
+  // Empty the cart whenever the user signs out without placing an order,
+  // so the next login (or the next user on this device) starts fresh.
+  useEffect(() => {
+    const unsubscribe = onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setCartItems([]);
+      }
+    });
+    return unsubscribe;
+  }, []);
 
   const addToCart = (product, quantity = 1) => {
     setCartItems(prev => {

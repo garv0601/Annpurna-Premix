@@ -15,6 +15,15 @@ import {
   uploadProfileImage,
   sendAuthOtp        as authSendAuthOtp,
   verifyAuthOtp      as authVerifyAuthOtp,
+  updatePassword     as authUpdatePassword,
+  resetPasswordForEmail as authResetPasswordForEmail,
+  listMfaFactors     as authListMfaFactors,
+  enrollTotpFactor   as authEnrollTotpFactor,
+  verifyTotpFactor   as authVerifyTotpFactor,
+  unenrollFactor     as authUnenrollFactor,
+  signOutAllDevices  as authSignOutAllDevices,
+  deleteAccount      as authDeleteAccount,
+  syncProfileRow     as authSyncProfileRow,
 } from '../services/auth';
 import { credentialsMissing } from '../lib/supabase';
 
@@ -71,9 +80,47 @@ export function AuthProvider({ children }) {
     return result;
   };
 
+  // Keeps the admin-facing Profiles table row (full_name/phone/avatar_url) in sync
+  const syncProfileRow = async (fields) => authSyncProfileRow(fields);
+
   // OTP / Passwordless actions
   const sendAuthOtp = async (method, identifier, metadata) => authSendAuthOtp(method, identifier, metadata);
   const verifyAuthOtp = async (method, identifier, token) => authVerifyAuthOtp(method, identifier, token);
+
+  // Security actions
+  const updatePassword = async (newPassword) => {
+    const result = await authUpdatePassword(newPassword);
+    // Keep the local user in sync so the session stays authenticated and the
+    // UI flips from "Set Password" to "Change Password" (has_password flag).
+    if (!result.error && result.data?.user) {
+      setUser(result.data.user);
+    }
+    return result;
+  };
+  const resetPasswordForEmail = async (email, redirectTo) => authResetPasswordForEmail(email, redirectTo);
+  const listMfaFactors = async () => authListMfaFactors();
+  const enrollTotpFactor = async () => authEnrollTotpFactor();
+  const verifyTotpFactor = async (factorId, code) => authVerifyTotpFactor(factorId, code);
+  const unenrollFactor = async (factorId) => authUnenrollFactor(factorId);
+
+  // Account actions
+  const signOutAllDevices = async () => {
+    const result = await authSignOutAllDevices();
+    if (!result.error) {
+      setUser(null);
+      setSession(null);
+    }
+    return result;
+  };
+  const deleteAccount = async () => {
+    const result = await authDeleteAccount();
+    if (!result.error) {
+      await authSignOut();
+      setUser(null);
+      setSession(null);
+    }
+    return result;
+  };
 
   const value = {
     user,
@@ -87,9 +134,18 @@ export function AuthProvider({ children }) {
     signInWithGoogle,
     signInWithFacebook,
     updateProfile,
+    syncProfileRow,
     uploadProfileImage,
     sendAuthOtp,
     verifyAuthOtp,
+    updatePassword,
+    resetPasswordForEmail,
+    listMfaFactors,
+    enrollTotpFactor,
+    verifyTotpFactor,
+    unenrollFactor,
+    signOutAllDevices,
+    deleteAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

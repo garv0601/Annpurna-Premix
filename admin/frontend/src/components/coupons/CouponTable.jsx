@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Edit2, Ticket, Calendar, Percent, IndianRupee } from 'lucide-react';
+import { Edit2, Ticket, Calendar, Percent, IndianRupee, Trash2 } from 'lucide-react';
 import CouponStatusBadge from './CouponStatusBadge';
 import '../customers/CustomerTable.css'; // Reuse table layout CSS
 import './CouponTable.css'; // Minor coupon-specific additions
@@ -12,7 +12,13 @@ function formatDate(iso) {
   });
 }
 
-export default function CouponTable({ coupons, onEdit }) {
+export default function CouponTable({ coupons, onEdit, onDelete }) {
+  const handleDelete = (coup) => {
+    if (window.confirm(`Deactivate coupon "${coup.code}"? It will no longer be usable, but existing orders that used it are kept intact.`)) {
+      onDelete?.(coup.id);
+    }
+  };
+
   if (!coupons || coupons.length === 0) {
     return (
       <div className="ctable-empty">
@@ -46,7 +52,7 @@ export default function CouponTable({ coupons, onEdit }) {
           <tbody>
             {coupons.map((coup, idx) => {
               const usageLimitStr = coup.usage_limit ? coup.usage_limit : 'Unlimited';
-              const progressPct = coup.usage_limit ? Math.min((coup.usage_count / coup.usage_limit) * 100, 100) : 0;
+              const progressPct = coup.usage_limit ? Math.min((coup.used_count / coup.usage_limit) * 100, 100) : 0;
               
               return (
                 <motion.tr
@@ -70,7 +76,7 @@ export default function CouponTable({ coupons, onEdit }) {
                   </td>
                   <td>
                     <div className="coup-usage-cell">
-                      <span className="ctable-metric">{coup.usage_count} / {usageLimitStr}</span>
+                      <span className="ctable-metric">{coup.used_count} / {usageLimitStr}</span>
                       {coup.usage_limit && (
                         <div className="coup-progress-bar">
                           <div className="coup-progress-fill" style={{ width: `${progressPct}%` }} />
@@ -79,7 +85,7 @@ export default function CouponTable({ coupons, onEdit }) {
                     </div>
                   </td>
                   <td>
-                    <span className="ctable-date">{formatDate(coup.expiry_date)}</span>
+                    <span className="ctable-date">{formatDate(coup.expires_at)}</span>
                   </td>
                   <td>
                     <CouponStatusBadge status={coup.status} />
@@ -93,6 +99,15 @@ export default function CouponTable({ coupons, onEdit }) {
                       whileTap={{ scale: 0.95 }}
                     >
                       <Edit2 size={15} strokeWidth={2} />
+                    </motion.button>
+                    <motion.button
+                      className="ctable-action-btn ctable-action-danger"
+                      onClick={() => handleDelete(coup)}
+                      title="Deactivate Coupon"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Trash2 size={15} strokeWidth={2} />
                     </motion.button>
                   </td>
                 </motion.tr>
@@ -125,15 +140,15 @@ export default function CouponTable({ coupons, onEdit }) {
                   {coup.discount_type === 'percentage' ? `${coup.discount_value}% off` : `₹${coup.discount_value} off`}
                 </div>
                 <div className="cmc-contact-row">
-                  <Calendar size={13} /> Expires: {formatDate(coup.expiry_date)}
+                  <Calendar size={13} /> Expires: {formatDate(coup.expires_at)}
                 </div>
                 
                 <div className="cmc-metrics-grid" style={{ gridTemplateColumns: '1fr' }}>
                   <div className="cmc-metric">
-                    <span className="cmc-label">Usage ({coup.usage_count} / {usageLimitStr})</span>
+                    <span className="cmc-label">Usage ({coup.used_count} / {usageLimitStr})</span>
                     {coup.usage_limit && (
                       <div className="coup-progress-bar" style={{ marginTop: '4px' }}>
-                        <div className="coup-progress-fill" style={{ width: `${Math.min((coup.usage_count / coup.usage_limit) * 100, 100)}%` }} />
+                        <div className="coup-progress-fill" style={{ width: `${Math.min((coup.used_count / coup.usage_limit) * 100, 100)}%` }} />
                       </div>
                     )}
                   </div>
@@ -147,6 +162,13 @@ export default function CouponTable({ coupons, onEdit }) {
                   whileTap={{ scale: 0.97 }}
                 >
                   <Edit2 size={14} /> Edit Coupon
+                </motion.button>
+                <motion.button
+                  className="cmc-view-btn"
+                  onClick={() => handleDelete(coup)}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <Trash2 size={14} /> Deactivate
                 </motion.button>
               </div>
             </motion.div>

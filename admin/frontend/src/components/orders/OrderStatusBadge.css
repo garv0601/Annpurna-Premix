@@ -14,6 +14,26 @@
   letter-spacing: 0.2px;
 }
 
+.order-badge-clickable {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.order-badge-clickable:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.order-badge-clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.order-badge-clickable:active {
+  transform: scale(0.97);
+}
+
 .order-badge-dot {
   width: 6px;
   height: 6px;

@@ -33,3 +33,9 @@
   border-radius: 3px;
   transition: width 0.3s ease;
 }
+
+.ctable-action-danger {
+  margin-left: 6px;
+  color: #B22222;
+}
+

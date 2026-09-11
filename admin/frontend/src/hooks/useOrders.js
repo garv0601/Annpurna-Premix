@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getOrders, getOrderStats, getOrderDetails } from '../services/orderService';
+import { getOrders, getOrderStats, getOrderDetails, updateOrderStatus } from '../services/orderService';
 
 /**
  * Custom hook for the Order Management page.
@@ -23,6 +23,8 @@ export function useOrders() {
   /* ── Detail view ── */
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const [statusMessage, setStatusMessage] = useState(null);
 
   /* ── State ── */
   const [loading, setLoading] = useState(true);
@@ -84,8 +86,46 @@ export function useOrders() {
 
   const closeDetail = useCallback(() => {
     setDetailOpen(false);
+    setStatusMessage(null);
     setTimeout(() => setSelectedOrder(null), 300); // clear after animation
   }, []);
+
+  const changeOrderStatus = useCallback(async (newStatus) => {
+    if (!selectedOrder || newStatus === selectedOrder.status) return;
+
+    const previousStatus = selectedOrder.status;
+    setStatusUpdating(true);
+    setStatusMessage(null);
+
+    try {
+      await updateOrderStatus(selectedOrder.id, newStatus);
+
+      setSelectedOrder((current) => current ? { ...current, status: newStatus } : current);
+      setOrders((current) => current.map((order) =>
+        order.id === selectedOrder.id ? { ...order, status: newStatus } : order
+      ));
+      setStatusMessage({ type: 'success', text: 'Order status updated successfully' });
+
+      try {
+        const [statsData, ordersData, detail] = await Promise.all([
+          getOrderStats(),
+          getOrders({ page, pageSize, search, status: statusFilter, dateRange }),
+          getOrderDetails(selectedOrder.id),
+        ]);
+        setStats(statsData);
+        setOrders(ordersData.orders);
+        setTotal(ordersData.total);
+        setSelectedOrder(detail);
+      } catch (refreshError) {
+        console.error('Order status saved, but revalidation failed:', refreshError);
+      }
+    } catch (err) {
+      setSelectedOrder((current) => current ? { ...current, status: previousStatus } : current);
+      setStatusMessage({ type: 'error', text: err.message || 'Failed to update order status' });
+    } finally {
+      setStatusUpdating(false);
+    }
+  }, [selectedOrder, page, pageSize, search, statusFilter, dateRange]);
 
   /* ── Pagination helpers ── */
   const totalPages = Math.ceil(total / pageSize);
@@ -136,5 +176,8 @@ export function useOrders() {
     detailOpen,
     openDetail,
     closeDetail,
+    changeOrderStatus,
+    statusUpdating,
+    statusMessage,
   };
 }

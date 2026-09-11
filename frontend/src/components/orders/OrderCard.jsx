@@ -110,34 +110,34 @@ export default function OrderCard({ order, onReorder }) {
         </div>
 
         <div className="order-card-actions">
+          <button
+            onClick={() => navigate(`/orders/${order.id}`)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              background: 'transparent',
+              border: '1px solid #5D4037',
+              color: '#1C1007',
+              padding: '10px 16px',
+              borderRadius: '24px',
+              fontFamily: "'Be Vietnam Pro', sans-serif",
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+              whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(93, 64, 55, 0.04)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            aria-label={`View details for order ${order.id}`}
+          >
+            <Eye size={14} />
+            View Details
+          </button>
           {order.status === 'delivered' && (
-            <>
-              <button
-                onClick={() => navigate(`/orders/${order.id}`)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  background: 'transparent',
-                  border: '1px solid #5D4037',
-                  color: '#1C1007',
-                  padding: '10px 16px',
-                  borderRadius: '24px',
-                  fontFamily: "'Be Vietnam Pro', sans-serif",
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'background 0.2s',
-                  whiteSpace: 'nowrap',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(93, 64, 55, 0.04)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                aria-label={`View details for order ${order.id}`}
-              >
-                View Details
-              </button>
-              <button
+            <button
                 onClick={handleReorder}
                 disabled={isReordering}
                 style={{
@@ -163,13 +163,12 @@ export default function OrderCard({ order, onReorder }) {
               >
                 <ShoppingBag size={14} />
                 {isReordering ? 'Added to cart' : 'Reorder'}
-              </button>
-            </>
+            </button>
           )}
 
           {order.status === 'in-transit' && (
             <button
-              onClick={() => navigate(`/orders/${order.id}/track`)}
+              onClick={() => navigate(`/account/orders/${order.id}/track`)}
               style={{
                 display: 'flex',
                 alignItems: 'center',

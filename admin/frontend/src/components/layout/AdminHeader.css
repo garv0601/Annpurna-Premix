@@ -104,6 +104,10 @@
   background: #fff;
 }
 
+.header-notification-wrap {
+  position: relative;
+}
+
 .header-notification-btn {
   position: relative;
   width: 40px;
@@ -127,13 +131,21 @@
 
 .notification-badge {
   position: absolute;
-  top: 8px;
-  right: 9px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  top: -4px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
   background: var(--color-primary);
   border: 2px solid var(--bg-surface);
+  color: var(--text-on-primary);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .header-avatar {

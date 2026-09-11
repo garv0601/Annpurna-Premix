@@ -1,0 +1,64 @@
+/* Coupon success celebration — rendered in a body-level portal, centered
+   on screen, never blocks clicks (pointer-events: none) and auto-dismisses. */
+
+.coupon-celebration-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 3000;
+}
+
+.coupon-celebration-confetti {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, 90vw);
+  height: 260px;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  border-radius: 1px;
+}
+
+.coupon-celebration-card {
+  position: relative;
+  background: linear-gradient(135deg, #FFFDF9, #FFF3E0);
+  border: 1px solid rgba(178, 34, 34, 0.15);
+  box-shadow: 0 10px 30px rgba(93, 64, 55, 0.22);
+  border-radius: 16px;
+  padding: 16px 26px;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.coupon-celebration-text {
+  margin: 0;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #3D2B1F;
+  white-space: nowrap;
+}
+
+.coupon-celebration-text strong {
+  color: #B22222;
+}
+
+@media (max-width: 600px) {
+  .coupon-celebration-card {
+    padding: 14px 20px;
+  }
+
+  .coupon-celebration-text {
+    font-size: 14px;
+    white-space: normal;
+  }
+}

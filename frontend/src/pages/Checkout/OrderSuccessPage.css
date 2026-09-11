@@ -1,0 +1,269 @@
+/* ================================================================
+   ANNPURNA — Order Success / Confirmation Page
+   Reuses the global design tokens (global.css :root variables).
+   ================================================================ */
+
+.order-success-page {
+  min-height: 100vh;
+  background: var(--bg-page, #FFF8F4);
+  font-family: var(--font-body, 'Be Vietnam Pro', sans-serif);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(24px, 6vw, 64px) clamp(16px, 4vw, 24px);
+}
+
+.order-success-card {
+  background: #FFFFFF;
+  border-radius: var(--radius-lg, 18px);
+  width: 100%;
+  max-width: 560px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg, 0 10px 32px rgba(93, 64, 55, 0.12));
+}
+
+/* ── Header (warm pink) ── */
+.order-success-header {
+  background: linear-gradient(180deg, #FCE7E1 0%, #FBEDE7 100%);
+  padding: clamp(28px, 5vw, 40px) clamp(20px, 5vw, 40px) clamp(24px, 4vw, 32px);
+  text-align: center;
+}
+
+.order-success-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-secondary, #FFC300);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  box-shadow: 0 6px 16px rgba(255, 195, 0, 0.35);
+}
+
+.order-success-title {
+  font-family: var(--font-heading, 'Literata', Georgia, serif);
+  font-size: clamp(26px, 5vw, 34px);
+  font-weight: 700;
+  color: var(--color-primary, #B22222);
+  margin: 0 0 10px;
+}
+
+.order-success-subtitle {
+  font-size: clamp(13px, 2.5vw, 15px);
+  color: var(--text-muted, #7A5C4A);
+  line-height: 1.55;
+  margin: 0 auto;
+  max-width: 340px;
+}
+
+/* ── Body ── */
+.order-success-body {
+  padding: clamp(20px, 4vw, 32px) clamp(20px, 5vw, 40px);
+}
+
+.order-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.order-meta-block .order-meta-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-light, #A8816A);
+  margin-bottom: 6px;
+}
+
+.order-meta-block.text-right {
+  text-align: right;
+}
+
+.order-meta-value {
+  font-size: clamp(15px, 3vw, 17px);
+  font-weight: 700;
+  color: var(--text-heading, #1C1007);
+}
+
+.order-meta-value.delivery {
+  color: var(--color-secondary-dark, #C79200);
+}
+
+.order-success-divider {
+  border: none;
+  border-top: 1px solid var(--border-color, rgba(93, 64, 55, 0.12));
+  margin: clamp(18px, 3vw, 24px) 0;
+}
+
+/* ── Order summary ── */
+.order-summary-heading {
+  font-family: var(--font-heading, 'Literata', Georgia, serif);
+  font-size: clamp(17px, 3vw, 19px);
+  font-weight: 700;
+  color: var(--text-heading, #1C1007);
+  margin: 0 0 16px;
+}
+
+.order-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.order-item-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm, 8px);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg-surface-2, #FEF4EC);
+}
+
+.order-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-item-name {
+  font-size: clamp(14px, 2.6vw, 15px);
+  font-weight: 600;
+  color: var(--text-heading, #1C1007);
+  margin: 0 0 3px;
+}
+
+.order-item-meta {
+  font-size: 12px;
+  color: var(--text-muted, #7A5C4A);
+}
+
+.order-item-price {
+  font-size: clamp(14px, 2.6vw, 15px);
+  font-weight: 700;
+  color: var(--text-heading, #1C1007);
+  white-space: nowrap;
+}
+
+/* ── Total ── */
+.order-total-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #FCEEE9;
+  border-radius: var(--radius-md, 12px);
+  padding: clamp(16px, 3vw, 20px);
+  margin-top: clamp(18px, 3vw, 24px);
+}
+
+.order-total-label {
+  font-size: clamp(15px, 2.8vw, 16px);
+  font-weight: 700;
+  color: var(--text-heading, #1C1007);
+}
+
+.order-total-amount {
+  font-size: clamp(18px, 3.5vw, 22px);
+  font-weight: 800;
+  color: var(--color-primary, #B22222);
+}
+
+/* ── Buttons ── */
+.order-success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: clamp(20px, 4vw, 28px);
+}
+
+.order-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: var(--radius-md, 12px);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition-fast, all 0.18s ease);
+}
+
+.order-btn-primary {
+  background: var(--color-primary, #B22222);
+  color: #FFFFFF;
+}
+
+.order-btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-dark, #8B1A1A);
+}
+
+.order-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.order-btn-secondary {
+  background: #FFFFFF;
+  color: var(--text-body, #3D2B1F);
+  border: 1.5px solid var(--border-color, rgba(93, 64, 55, 0.18));
+}
+
+.order-btn-secondary:hover {
+  border-color: var(--color-primary, #B22222);
+  color: var(--color-primary, #B22222);
+}
+
+/* ── Tip footer ── */
+.order-success-tip {
+  background: var(--color-secondary, #FFC300);
+  padding: clamp(16px, 3vw, 20px) clamp(20px, 5vw, 40px);
+  text-align: center;
+  font-size: clamp(12px, 2.5vw, 13.5px);
+  line-height: 1.55;
+  color: #5A4200;
+}
+
+.order-success-tip strong {
+  color: #3D2B00;
+}
+
+/* ── Loading / error states ── */
+.order-success-status {
+  text-align: center;
+  color: var(--text-muted, #7A5C4A);
+  font-size: 15px;
+  padding: 40px 0;
+}
+
+.order-success-spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(178, 34, 34, 0.15);
+  border-top-color: var(--color-primary, #B22222);
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  animation: order-success-spin 0.8s linear infinite;
+}
+
+@keyframes order-success-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 420px) {
+  .order-meta-block.text-right {
+    text-align: left;
+  }
+}

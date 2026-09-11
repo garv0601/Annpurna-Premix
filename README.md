@@ -303,7 +303,7 @@ In your Supabase dashboard → **Authentication → Providers**, enable:
 
 ## 📌 Notes
 
-- `shipping_addres` (missing trailing 's') is the **exact column name** in the database. Do not rename it without a coordinated migration.
+- `orders.shipping_address` (with trailing 's') is the **exact column name** in the database (verified live). It stores a JSONB snapshot of the address used at checkout.
 - `order_items.product_name` and `order_items.product_price` are **purchase-time snapshots** — never overwrite with current product data.
 - Admin auth is separate from customer auth. Admin users must have a record in `admin_users` with `is_active = true`.
 - All admin write operations are protected by RLS using the `is_admin()` database function.

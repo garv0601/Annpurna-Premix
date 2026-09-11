@@ -108,20 +108,29 @@
 
 @media (max-width: 520px) {
   .order-stats-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 
   .order-stat-card {
-    padding: 14px 16px 12px;
+    padding: 14px 14px 12px;
+    gap: 10px;
+  }
+
+  .ostat-label {
+    font-size: 11px;
   }
 
   .ostat-value {
-    font-size: 22px;
+    font-size: 20px;
+  }
+
+  .ostat-trend {
+    font-size: 11px;
   }
 
   .ostat-icon-wrap {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
   }
 }

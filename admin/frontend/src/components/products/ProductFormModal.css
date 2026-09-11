@@ -12,18 +12,19 @@
 
 .pfm-modal {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 680px;
-  max-width: calc(100% - 24px);
+  inset: 16px 12px;
+  width: min(680px, calc(100vw - 24px));
+  height: fit-content;
+  margin: auto;
   max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   background: var(--bg-surface);
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   z-index: 951;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* ── Header ── */
@@ -72,6 +73,7 @@
 .pfm-scroll-body {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 20px 22px;
   display: flex;
   flex-direction: column;
@@ -111,6 +113,119 @@
   font-weight: 400;
 }
 
+/* ── Image URL / Upload divider ── */
+.pfm-image-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 0;
+  color: var(--text-light);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pfm-image-divider::before,
+.pfm-image-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.pfm-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Selected/current image preview ── */
+.pfm-image-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-page);
+}
+
+.pfm-image-preview-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+}
+
+.pfm-image-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pfm-image-preview-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pfm-image-preview-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pfm-image-change-btn,
+.pfm-image-remove-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-body);
+}
+
+.pfm-image-change-btn:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary-light);
+}
+
+.pfm-image-remove-btn {
+  color: #E74C3C;
+}
+
+.pfm-image-remove-btn:hover {
+  background: rgba(231, 76, 60, 0.08);
+  border-color: rgba(231, 76, 60, 0.3);
+}
+
+.pfm-image-priority-note {
+  font-size: 11px;
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.pfm-image-uploading-note {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
 /* ── Fields ── */
 .pfm-field-row {
   display: grid;
@@ -122,6 +237,7 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+  min-width: 0;
 }
 
 .pfm-label {
@@ -266,20 +382,67 @@
 /* ── Responsive ── */
 @media (max-width: 560px) {
   .pfm-modal {
-    width: 100vw;
-    max-width: 100vw;
-    max-height: 100vh;
-    border-radius: 0;
-    top: 0;
-    left: 0;
-    transform: none;
+    inset: max(8px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+    width: auto;
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 14px;
+  }
+
+  .pfm-header {
+    padding: 14px 16px;
+  }
+
+  .pfm-close {
+    width: 36px;
+    height: 36px;
   }
 
   .pfm-field-row {
     grid-template-columns: 1fr;
   }
 
-  .pfm-body {
+  .pfm-scroll-body {
     padding: 16px;
+    gap: 14px;
+  }
+
+  .pfm-toggles-row {
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    margin-top: 4px;
+  }
+
+  .pfm-image-preview {
+    flex-wrap: wrap;
+  }
+
+  .pfm-image-preview-actions {
+    width: 100%;
+  }
+
+  .pfm-image-change-btn,
+  .pfm-image-remove-btn {
+    flex: 1;
+  }
+
+  .pfm-footer {
+    flex-wrap: wrap;
+    padding: 12px 16px;
+  }
+
+  .pfm-footer > div {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .pfm-cancel-btn,
+  .pfm-submit-btn {
+    flex: 1;
+    padding-inline: 12px;
   }
 }

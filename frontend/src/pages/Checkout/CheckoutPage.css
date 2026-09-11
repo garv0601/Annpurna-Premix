@@ -386,6 +386,7 @@
   border: 1px dashed rgba(93, 64, 55, 0.2);
   border-radius: 12px;
   color: #7A5C4A;
+  
 }
 
 .empty-address-state p {
@@ -394,9 +395,17 @@
 
 .empty-address-state .add-address-btn {
   margin-top: 16px;
-  max-width: 200px;
-  margin-left: auto;
-  margin-right: auto;
+}
+
+/* Only cap the button width once there's enough room to spare — on mobile it
+   should stay a full-width, comfortable touch target rather than a tiny
+   button stranded in a sea of empty space. */
+@media (min-width: 601px) {
+  .empty-address-state .add-address-btn {
+    max-width: 240px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 .loading-state {
@@ -1099,7 +1108,14 @@
     width: 100%;
     order: 2;
   }
-  
+
+  /* On mobile the summary flows naturally after the steps instead of
+     sticking mid-scroll, which previously made it look accidentally clipped. */
+  .order-summary-card {
+    position: static;
+    top: auto;
+  }
+
   .address-list {
     grid-template-columns: 1fr;
   }
@@ -1121,7 +1137,38 @@
 
   .checkout-main {
     padding: 20px 16px 32px;
-    gap: 24px;
+    gap: 18px;
+  }
+
+  /* Tighten the vertical rhythm between steps on mobile (~25-35% less
+     empty space) while keeping enough breathing room to feel premium. */
+  .checkout-step {
+    padding-bottom: 22px;
+  }
+
+  .step-header {
+    margin-bottom: 14px;
+  }
+
+  /* Locked (upcoming) steps: muted but clearly readable, not near-invisible. */
+  .disabled-step {
+    opacity: 0.85;
+  }
+
+  .address-list {
+    margin-bottom: 16px;
+  }
+
+  .delivery-options {
+    margin-bottom: 14px;
+  }
+
+  .maas-tip-card {
+    margin-bottom: 16px;
+  }
+
+  .payment-methods-wrap {
+    margin-bottom: 14px;
   }
 
   .step-title {
@@ -1178,7 +1225,8 @@
 @media (max-width: 500px) {
   .step-content {
     padding-left: 0;
-    margin-top: 16px;
+    margin-top: 12px;
+    
   }
   
   .step-connector {
@@ -1189,9 +1237,16 @@
     gap: 12px;
   }
 
+  /* Comfortable, full-width touch target with a bit more visual presence. */
   .continue-btn {
     width: 100%;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
+    padding: 14px 24px;
+    box-shadow: 0 4px 14px rgba(28, 16, 7, 0.16);
   }
 
   .payment-method-body {
@@ -1220,5 +1275,19 @@
   .summary-item-image-wrap {
     width: 48px;
     height: 48px;
+  }
+
+  .summary-item {
+    gap: 12px;
+  }
+
+  /* Give the smallest phones a little more usable width instead of losing
+     it all to fixed card padding. */
+  .order-summary-card {
+    padding: 18px;
+  }
+
+  .empty-address-state {
+    padding: 32px 16px;
   }
 }

@@ -1,29 +1,95 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, Phone, Loader2, AlertCircle, KeyRound, ArrowLeft } from 'lucide-react';
+import { Mail, Phone, Loader2, AlertCircle, KeyRound, ArrowLeft, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import AuthLayout from '../../components/auth/AuthLayout';
 import { useAuth } from '../../hooks/useAuth';
 
 const LOGIN_IMAGE = 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=900&q=85&auto=format&fit=crop';
 
+/** Map raw Supabase auth errors to friendly, user-facing copy. */
+function friendlyAuthError(err) {
+  const msg = (err?.message || '').toLowerCase();
+  if (msg.includes('invalid login credentials')) return 'Incorrect email or password. Please try again.';
+  if (msg.includes('email not confirmed')) return 'Please confirm your email address before logging in.';
+  return err?.message || 'Something went wrong. Please try again.';
+}
+
 export default function LoginPage() {
   const [step, setStep] = useState('FORM'); // 'FORM' | 'OTP'
   const [inputValue, setInputValue] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState('');
   const [method, setMethod] = useState(''); // 'email' | 'phone'
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  
-  const { signInWithGoogle, signInWithFacebook, sendAuthOtp, verifyAuthOtp } = useAuth();
+  const [infoMessage, setInfoMessage] = useState('');
+
+  const { signIn, signInWithGoogle, signInWithFacebook, sendAuthOtp, verifyAuthOtp, resetPasswordForEmail } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/';
 
+  // Email + password login (works for password users and Google users who set a password).
+  const handlePasswordLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    setInfoMessage('');
+
+    const email = inputValue.trim();
+    if (!email || !email.includes('@')) {
+      setError('Please enter your email address to log in with a password.');
+      return;
+    }
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const { error: authError } = await signIn(email, password);
+    setIsSubmitting(false);
+
+    if (authError) {
+      if (authError.code === 'not_configured') {
+        navigate(redirectPath);
+      } else {
+        setError(friendlyAuthError(authError));
+      }
+    } else {
+      navigate(redirectPath);
+    }
+  };
+
+  // Send a password-reset email for the address in the identifier field.
+  const handleForgotPassword = async () => {
+    setError('');
+    setInfoMessage('');
+
+    const email = inputValue.trim();
+    if (!email || !email.includes('@')) {
+      setError('Enter your email address above, then tap "Forgot password?" to receive a reset link.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const { error: authError } = await resetPasswordForEmail(email);
+    setIsSubmitting(false);
+
+    if (authError && authError.code !== 'not_configured') {
+      setError(authError.message || 'Failed to send reset email. Please try again.');
+    } else {
+      setInfoMessage(`If an account exists for ${email}, a password reset link is on its way.`);
+    }
+  };
+
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setError('');
+    setInfoMessage('');
 
     if (!inputValue.trim()) {
       setError('Please enter your email or mobile number.');
@@ -39,11 +105,11 @@ export default function LoginPage() {
     }
 
     setMethod(selectedMethod);
-    setIsSubmitting(true);
+    setOtpSending(true);
 
     const { error: authError } = await sendAuthOtp(selectedMethod, inputValue, {});
 
-    setIsSubmitting(false);
+    setOtpSending(false);
 
     if (authError) {
       if (authError.code === 'not_configured') {
@@ -158,26 +224,59 @@ export default function LoginPage() {
 
         {/* ── STEP 1: FORM ── */}
         {step === 'FORM' && (
-          <motion.form initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} onSubmit={handleSendOtp} style={{ marginBottom: '32px' }}>
-            <div style={{ marginBottom: '20px', position: 'relative' }}>
+          <motion.form initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} onSubmit={handlePasswordLogin} style={{ marginBottom: '32px' }}>
+            <div style={{ marginBottom: '18px', position: 'relative' }}>
               <label style={{ display: 'block', fontFamily: "'Be Vietnam Pro', sans-serif", fontSize: '13px', fontWeight: 600, color: '#5D4037', marginBottom: '8px' }}>Mobile Number or Email</label>
               <div style={{ position: 'relative' }}>
                 <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#A8816A' }}><Mail size={18} /></div>
-                <input type="text" placeholder="Enter your details" value={inputValue} onChange={(e) => { setInputValue(e.target.value); setError(''); }} style={inputStyle} />
+                <input type="text" placeholder="Enter your details" value={inputValue} onChange={(e) => { setInputValue(e.target.value); setError(''); setInfoMessage(''); }} style={inputStyle} />
               </div>
-              
+            </div>
+
+            <div style={{ marginBottom: '18px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{ fontFamily: "'Be Vietnam Pro', sans-serif", fontSize: '13px', fontWeight: 600, color: '#5D4037' }}>Password</label>
+                <button type="button" onClick={handleForgotPassword} disabled={isSubmitting} style={{ background: 'none', border: 'none', color: '#B22222', fontSize: '13px', fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer', padding: 0, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  Forgot password?
+                </button>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#A8816A' }}><Lock size={18} /></div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); setInfoMessage(''); }}
+                  style={{ ...inputStyle, paddingRight: '44px' }}
+                />
+                <button type="button" onClick={() => setShowPassword((s) => !s)} aria-label={showPassword ? 'Hide password' : 'Show password'} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#A8816A', cursor: 'pointer', display: 'flex', padding: 0 }}>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
               <AnimatePresence>
                 {error && (
-                  <motion.div initial={{ opacity: 0, height: 0, marginTop: 0 }} animate={{ opacity: 1, height: 'auto', marginTop: 8 }} exit={{ opacity: 0, height: 0, marginTop: 0 }} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#B22222', fontSize: '13px', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  <motion.div initial={{ opacity: 0, height: 0, marginTop: 0 }} animate={{ opacity: 1, height: 'auto', marginTop: 10 }} exit={{ opacity: 0, height: 0, marginTop: 0 }} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#B22222', fontSize: '13px', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
                     <AlertCircle size={14} /><span>{error}</span>
+                  </motion.div>
+                )}
+                {infoMessage && (
+                  <motion.div initial={{ opacity: 0, height: 0, marginTop: 0 }} animate={{ opacity: 1, height: 'auto', marginTop: 10 }} exit={{ opacity: 0, height: 0, marginTop: 0 }} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#2F8B57', fontSize: '13px', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                    <CheckCircle2 size={14} /><span>{infoMessage}</span>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
             <button type="submit" disabled={isSubmitting} style={buttonStyle}>
-              {isSubmitting ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Sending code...</> : 'Continue →'}
+              {isSubmitting ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Logging in...</> : 'Log In'}
             </button>
+
+            <div style={{ marginTop: '12px' }}>
+              <button type="button" onClick={handleSendOtp} disabled={otpSending} style={{ ...socialButtonStyle, cursor: otpSending ? 'not-allowed' : 'pointer' }}>
+                {otpSending ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Sending code...</> : <><KeyRound size={16} /> Email me a one-time code instead</>}
+              </button>
+            </div>
           </motion.form>
         )}
 
@@ -207,7 +306,7 @@ export default function LoginPage() {
               <button type="button" onClick={() => { setStep('FORM'); setError(''); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#A8816A', fontSize: '14px', cursor: 'pointer', padding: 0 }}>
                 <ArrowLeft size={14} /> Back
               </button>
-              <button type="button" onClick={handleSendOtp} disabled={isSubmitting} style={{ background: 'none', border: 'none', color: '#B22222', fontSize: '14px', fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+              <button type="button" onClick={handleSendOtp} disabled={otpSending} style={{ background: 'none', border: 'none', color: '#B22222', fontSize: '14px', fontWeight: 600, cursor: otpSending ? 'not-allowed' : 'pointer', padding: 0 }}>
                 Resend Code
               </button>
             </div>

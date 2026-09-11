@@ -88,6 +88,11 @@
   background: var(--color-tertiary-light);
 }
 
+.stat-card-trend.down {
+  color: var(--status-cancelled);
+  background: var(--status-cancelled-bg);
+}
+
 .stat-card-trend.steady {
   color: var(--text-muted);
   background: rgba(93, 64, 55, 0.06);
@@ -105,16 +110,30 @@
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .stat-card {
-    padding: 18px 16px 14px;
+    padding: 16px 14px 12px;
+    gap: 10px;
+  }
+
+  .stat-card-top {
+    gap: 10px;
   }
 
   .stat-card-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  .stat-card-label {
+    font-size: 11px;
   }
 
   .stat-card-value {
-    font-size: 22px;
+    font-size: 20px;
+  }
+
+  .stat-card-trend {
+    font-size: 11px;
+    padding: 4px 8px;
   }
 }

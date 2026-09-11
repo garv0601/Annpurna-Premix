@@ -4,16 +4,18 @@
  * Handles all order-related database operations using the Supabase admin client.
  * All totals are calculated server-side — frontend values are ignored.
  *
- * DB Column note: The column is `shipping_addres` (missing trailing 's').
- * See DATABASE_SCHEMA.md for details.
+ * DB Column note: the orders shipping column is `shipping_address`
+ * (verified against the live schema). See DATABASE_SCHEMA.md.
  */
 
 import { supabaseAdmin } from '../config/supabase.js';
+import { computeTrend } from '../utils/trend.js';
 
 // ── Business rules ───────────────────────────────────────────────────────────
-const TAX_RATE        = 0.05;   // 5%
 const COD_FEE         = 40;     // ₹40 COD convenience fee
 const EXPRESS_COST    = 50;     // ₹50 express shipping
+const STANDARD_DELIVERY_THRESHOLD = 200; // subtotal >= this -> free standard delivery
+const STANDARD_DELIVERY_CHARGE    = 20;  // charged when subtotal is below the threshold
 const CURRENCY        = 'INR';
 
 // ── Status values (matching DB enums/conventions already in use) ──────────────
@@ -109,7 +111,7 @@ async function validateCoupon(couponCode, subtotal, customerId) {
   if (coupon.expires_at && new Date(coupon.expires_at) < now) {
     throw new Error('Coupon has expired');
   }
-  if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
+  if (coupon.usage_limit && (coupon.used_count || 0) >= coupon.usage_limit) {
     throw new Error('Coupon usage limit reached');
   }
   if (coupon.minimum_order_amount && subtotal < coupon.minimum_order_amount) {
@@ -138,7 +140,8 @@ function calculateTotals(validatedItems, coupon, deliveryMethod, paymentMethod) 
 
   let discountAmount = 0;
   if (coupon) {
-    if (coupon.discount_type === 'percent') {
+    // Admin UI stores 'percentage'; accept legacy 'percent' too — both mean the same thing.
+    if (coupon.discount_type === 'percentage' || coupon.discount_type === 'percent') {
       discountAmount = (subtotal * coupon.discount_value) / 100;
       if (coupon.maximum_discount) {
         discountAmount = Math.min(discountAmount, coupon.maximum_discount);
@@ -151,11 +154,14 @@ function calculateTotals(validatedItems, coupon, deliveryMethod, paymentMethod) 
     discountAmount = Number(discountAmount.toFixed(2));
   }
 
-  const shippingAmount = deliveryMethod === 'express' ? EXPRESS_COST : 0;
+  const shippingAmount = deliveryMethod === 'express'
+    ? EXPRESS_COST
+    : (subtotal >= STANDARD_DELIVERY_THRESHOLD ? 0 : STANDARD_DELIVERY_CHARGE);
   const codFee         = paymentMethod  === 'cod'     ? COD_FEE      : 0;
-  const taxableAmount  = subtotal - discountAmount + shippingAmount + codFee;
-  const taxAmount      = Number((taxableAmount * TAX_RATE).toFixed(2));
-  const totalAmount    = Number((taxableAmount + taxAmount).toFixed(2));
+  // Prices are tax-inclusive — total mirrors the Cart/Checkout formula exactly:
+  // Total = Subtotal + Shipping - Discount (+ COD fee, a separate payment surcharge).
+  const taxAmount      = 0;
+  const totalAmount    = Number((subtotal - discountAmount + shippingAmount + codFee).toFixed(2));
 
   return { subtotal, discountAmount, shippingAmount: shippingAmount + codFee, taxAmount, totalAmount };
 }
@@ -214,6 +220,23 @@ export async function createOrder({
     console.error('[OrderService] Profile not found:', profileError);
     throw new Error('Customer profile not found');
   }
+  console.log(`[OrderService] Profile resolved: ${profile.id}`);
+
+  // 1b. If the shipping address references a saved address row, confirm it belongs to this customer
+  if (shippingAddress?.id) {
+    const { data: addressRow, error: addressError } = await supabaseAdmin
+      .from('addresses')
+      .select('id')
+      .eq('id', shippingAddress.id)
+      .eq('customer_id', customerId)
+      .maybeSingle();
+
+    if (addressError || !addressRow) {
+      console.error('[OrderService] Address validation failed:', addressError);
+      throw new Error('Selected address not found or does not belong to you');
+    }
+    console.log(`[OrderService] Address validated: ${addressRow.id}`);
+  }
 
   // 2. Fetch + validate products server-side
   const validatedItems = await fetchAndValidateCartItems(cartItems);
@@ -265,7 +288,6 @@ export async function createOrder({
   };
 
   // 8. Insert order record
-  // NOTE: DB column is `shipping_addres` (missing trailing 's') — per DATABASE_SCHEMA.md
   const { data: order, error: orderError } = await supabaseAdmin
     .from('orders')
     .insert({
@@ -278,14 +300,20 @@ export async function createOrder({
       coupon_id:       coupon?.id || null,
       payment_status:  paymentStatus,
       order_status:    orderStatus,
-      shipping_addres: shippingAddressJson,   // ← exact column name with typo
-      notes:           notes || null,
+      shipping_address: shippingAddressJson,
+      notes:           notes || '', // orders.notes is NOT NULL in the live DB
     })
     .select('*')
     .single();
 
   if (orderError || !order) {
-    console.error('[OrderService] Order insert error:', orderError);
+    // Full Supabase error server-side only (code/details/hint) — never sent to the client.
+    console.error('[OrderService] Order insert error:', {
+      code:    orderError?.code,
+      message: orderError?.message,
+      details: orderError?.details,
+      hint:    orderError?.hint,
+    });
     throw new Error('Failed to create order record');
   }
 
@@ -315,11 +343,12 @@ export async function createOrder({
   console.log(`[OrderService] ${validatedItems.length} order items created`);
 
   // 10. Insert payment record
+  // payments.transaction_id is NOT NULL — COD has no real transaction ID, so use a placeholder.
   const paymentPayload = {
     order_id:         order.id,
     customer_id:      customerId,
     payment_provider: isCOD ? 'cod' : 'razorpay',
-    transaction_id:   transactionId || null,
+    transaction_id:   transactionId || `COD-${order.id}`,
     amount:           totalAmount,
     currency:         CURRENCY,
     payment_status:   paymentStatus,
@@ -356,23 +385,55 @@ export async function createOrder({
     }
   }
 
-  // 12. Update coupon usage count if coupon was applied
+  // 12. Record coupon usage + increment its used_count.
+  // Never let bookkeeping failures fail an order that was already created —
+  // supabase-js query builders are thenable but do NOT implement .catch(),
+  // so this must be awaited inside a real try/catch (not chained .catch()).
   if (coupon) {
-    await supabaseAdmin
-      .from('coupon_usage')
-      .insert({
-        coupon_id:       coupon.id,
-        customer_id:     customerId,
-        order_id:        order.id,
-        discount_amount: discountAmount,
-      });
+    try {
+      const { error: usageError } = await supabaseAdmin
+        .from('coupon_usage')
+        .insert({
+          coupon_id:       coupon.id,
+          customer_id:     customerId,
+          order_id:        order.id,
+          discount_amount: discountAmount,
+        });
+      if (usageError) {
+        console.error('[OrderService] Coupon usage insert error:', usageError);
+      }
 
-    await supabaseAdmin.rpc('increment_coupon_usage', { coupon_id: coupon.id }).catch(() => {
-      // increment function may not exist — silently ignore
-    });
+      const { error: incrementError } = await supabaseAdmin
+        .from('coupons')
+        .update({ used_count: (coupon.used_count || 0) + 1 })
+        .eq('id', coupon.id);
+      if (incrementError) {
+        console.error('[OrderService] Coupon used_count increment error:', incrementError);
+      }
+    } catch (err) {
+      console.error('[OrderService] Coupon usage bookkeeping failed:', err);
+    }
   }
 
   return order;
+}
+
+/**
+ * Preview a coupon's discount for a given subtotal WITHOUT creating an order.
+ * Used by the cart/checkout "Apply Coupon" UI so customers see the discount
+ * (and rejection reasons) before placing the order. Runs the exact same
+ * validation + calculation logic as real order creation.
+ */
+export async function previewCoupon(couponCode, subtotal, customerId) {
+  const coupon = await validateCoupon(couponCode, subtotal, customerId);
+  const { discountAmount } = calculateTotals([{ subtotal }], coupon, 'standard', 'card');
+
+  return {
+    code:          coupon.code,
+    discountType:  coupon.discount_type,
+    discountValue: coupon.discount_value,
+    discountAmount,
+  };
 }
 
 /**
@@ -393,7 +454,7 @@ export async function getCustomerOrders(customerId) {
       shipping_amount,
       tax_amount,
       total_amount,
-      shipping_addres,
+      shipping_address,
       notes,
       created_at,
       order_items (
@@ -402,7 +463,10 @@ export async function getCustomerOrders(customerId) {
         product_name,
         product_price,
         quantity,
-        subtotal
+        subtotal,
+        product:products!product_id (
+          image_url
+        )
       ),
       payments (
         payment_method,
@@ -440,7 +504,7 @@ export async function getCustomerOrderById(orderId, customerId) {
       shipping_amount,
       tax_amount,
       total_amount,
-      shipping_addres,
+      shipping_address,
       notes,
       created_at,
       updated_at,
@@ -485,7 +549,7 @@ export async function getAllOrders({ page = 1, pageSize = 10, search = '', statu
       payment_status,
       total_amount,
       created_at,
-      shipping_addres,
+      shipping_address,
       customer:Profiles!customer_id (
         id,
         full_name,
@@ -542,6 +606,7 @@ export async function getAllOrders({ page = 1, pageSize = 10, search = '', statu
     id:       o.id,
     orderId:  `#ORD-${o.id.slice(0, 8).toUpperCase()}`,
     date:     new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+    createdAt: o.created_at, // raw ISO timestamp — dashboard needs this for "Today, 10:24 AM" formatting
     status:   o.order_status,
     amount:   o.total_amount,
     subtotal: o.total_amount, // we'll show total as subtotal for the UI
@@ -597,7 +662,7 @@ export async function getOrderDetailsAdmin(orderId) {
       shipping_amount,
       tax_amount,
       total_amount,
-      shipping_addres,
+      shipping_address,
       notes,
       created_at,
       coupon_id,
@@ -621,12 +686,6 @@ export async function getOrderDetailsAdmin(orderId) {
         transaction_id,
         payment_provider,
         paid_at
-      ),
-      coupon:coupons!coupon_id (
-        id,
-        code,
-        discount_type,
-        discount_value
       )
     `)
     .eq('id', orderId)
@@ -637,11 +696,27 @@ export async function getOrderDetailsAdmin(orderId) {
     throw new Error('Order not found');
   }
 
+  let coupon = null;
+  if (data.coupon_id) {
+    const { data: couponData, error: couponError } = await supabaseAdmin
+      .from('coupons')
+      .select('id, code, discount_type, discount_value')
+      .eq('id', data.coupon_id)
+      .maybeSingle();
+
+    if (couponError) {
+      console.error('[OrderService] Get order coupon error:', couponError);
+      throw new Error('Failed to fetch order coupon');
+    }
+    coupon = couponData;
+  }
+
   // Map to the shape expected by admin UI OrderDetailDrawer
   return {
     id:        data.id,
     orderId:   `#ORD-${data.id.slice(0, 8).toUpperCase()}`,
     date:      new Date(data.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+    createdAt: data.created_at,
     status:    data.order_status,
     amount:    data.total_amount,
     subtotal:  data.subtotal,
@@ -657,13 +732,14 @@ export async function getOrderDetailsAdmin(orderId) {
     payment: {
       method: data.payment?.[0]?.payment_method || '',
       status: data.payment?.[0]?.payment_status || '',
+      provider: data.payment?.[0]?.payment_provider || '',
       transactionId: data.payment?.[0]?.transaction_id || '',
       paidAt: data.payment?.[0]?.paid_at || null,
     },
-    coupon: data.coupon ? {
-      code:          data.coupon.code,
-      discountType:  data.coupon.discount_type,
-      discountValue: data.coupon.discount_value,
+    coupon: coupon ? {
+      code:          coupon.code,
+      discountType:  coupon.discount_type,
+      discountValue: coupon.discount_value,
     } : null,
     items: (data.order_items || []).map(i => ({
       id:          i.id,
@@ -672,10 +748,36 @@ export async function getOrderDetailsAdmin(orderId) {
       quantity:    i.quantity,
       unitPrice:   i.product_price,
       subtotal:    i.subtotal,
+      imageUrl:    i.product?.image_url || '',
     })),
-    shippingAddress: data.shipping_addres,
+    shippingAddress: data.shipping_address,
     notes:     data.notes,
   };
+}
+
+/**
+ * Admin: update an order's lifecycle status.
+ */
+export async function updateOrderStatusAdmin(orderId, newStatus) {
+  if (!supabaseAdmin) throw new Error('Database not configured');
+  if (!Object.values(ORDER_STATUS).includes(newStatus)) {
+    throw new Error('Invalid order status');
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('orders')
+    .update({ order_status: newStatus, updated_at: new Date().toISOString() })
+    .eq('id', orderId)
+    .select('id, order_status, updated_at')
+    .maybeSingle();
+
+  if (error) {
+    console.error('[OrderService] Update order status error:', error);
+    throw new Error('Failed to update order status');
+  }
+  if (!data) throw new Error('Order not found');
+
+  return data;
 }
 
 /**
@@ -710,3 +812,184 @@ export async function getOrderStats() {
     cancelledTrend: `${data.length > 0 ? Math.round((counts.cancelled / data.length) * 100).toFixed(1) : 0}% rate`,
   };
 }
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+// Business rule shared by every dashboard sales/order figure below:
+// a 'cancelled' order never counts as a sale or a valid order for trend
+// purposes. total_amount is already the final, tax/shipping/discount-inclusive
+// order total (see DATABASE_SCHEMA.md) — it is used as-is, never recomputed.
+//
+// "This Week" is always Monday 00:00 → Sunday 23:59:59 in India Standard
+// Time (UTC+5:30, no DST). The app has no other timezone utility/config, and
+// IST is the only timezone implied by the existing ₹/en-IN formatting used
+// throughout the admin app, so it is used consistently here to avoid the
+// week boundary shifting with the server's OS timezone.
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function getISTWeekBoundaries(referenceDate = new Date()) {
+  const istNow = new Date(referenceDate.getTime() + IST_OFFSET_MS);
+  const istDay = istNow.getUTCDay(); // 0=Sun..6=Sat, in shifted "UTC" == IST wall clock
+  const daysSinceMonday = (istDay + 6) % 7; // Mon=0..Sun=6
+  const istMonday = new Date(Date.UTC(
+    istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate() - daysSinceMonday
+  ));
+  const thisWeekStart = new Date(istMonday.getTime() - IST_OFFSET_MS); // real UTC instant
+  const thisWeekEnd   = new Date(thisWeekStart.getTime() + 7 * DAY_MS);
+  const lastWeekStart = new Date(thisWeekStart.getTime() - 7 * DAY_MS);
+  return { thisWeekStart, thisWeekEnd, lastWeekStart };
+}
+
+function isBetween(iso, start, end) {
+  const t = new Date(iso).getTime();
+  return t >= start.getTime() && t < end.getTime();
+}
+
+/**
+ * Admin dashboard: Total Sales / Total Orders KPI cards + week-over-week trend.
+ *
+ *  - totalOrders = every order row (matches the Orders page's unfiltered total).
+ *  - totalSales  = sum(total_amount) over all NON-cancelled orders.
+ *  - trends compare this IST week (Mon 00:00 → now) against the prior 7 days.
+ */
+export async function getDashboardOverviewStats() {
+  if (!supabaseAdmin) throw new Error('Database not configured');
+
+  const { data, error } = await supabaseAdmin
+    .from('orders')
+    .select('order_status, total_amount, created_at');
+
+  if (error) {
+    console.error('[OrderService] Dashboard overview error:', error);
+    throw new Error('Failed to fetch dashboard statistics');
+  }
+
+  const rows = data || [];
+  const validRows = rows.filter(r => r.order_status !== ORDER_STATUS.CANCELLED);
+
+  const totalOrders = rows.length;
+  const totalSales  = validRows.reduce((sum, r) => sum + (Number(r.total_amount) || 0), 0);
+
+  const { thisWeekStart, thisWeekEnd, lastWeekStart } = getISTWeekBoundaries();
+
+  const thisWeekValid = validRows.filter(r => isBetween(r.created_at, thisWeekStart, thisWeekEnd));
+  const lastWeekValid = validRows.filter(r => isBetween(r.created_at, lastWeekStart, thisWeekStart));
+  const thisWeekAll   = rows.filter(r => isBetween(r.created_at, thisWeekStart, thisWeekEnd));
+  const lastWeekAll   = rows.filter(r => isBetween(r.created_at, lastWeekStart, thisWeekStart));
+
+  const thisWeekSales = thisWeekValid.reduce((sum, r) => sum + (Number(r.total_amount) || 0), 0);
+  const lastWeekSales = lastWeekValid.reduce((sum, r) => sum + (Number(r.total_amount) || 0), 0);
+
+  const salesTrend  = computeTrend(thisWeekSales, lastWeekSales);
+  const ordersTrend = computeTrend(thisWeekAll.length, lastWeekAll.length);
+
+  return {
+    totalSales,
+    totalOrders,
+    salesTrendPercent:   salesTrend.percent,
+    salesTrendDirection: salesTrend.direction,
+    ordersTrendPercent:   ordersTrend.percent,
+    ordersTrendDirection: ordersTrend.direction,
+  };
+}
+
+/**
+ * Admin dashboard: Weekly Sales Overview chart data.
+ * Returns 7 buckets labeled Mon → Sun (same fixed axis order as before),
+ * each representing that weekday's most recent occurrence within the
+ * trailing 7 IST days (today included) — NOT the strict Mon-Sun calendar
+ * week. Using the calendar week caused a real order placed a few days ago
+ * (e.g. last Sunday, before this week's Monday cutoff) to be silently
+ * excluded from every bucket, showing an all-zero graph despite real
+ * sales existing. Cancelled orders are still excluded from both lines.
+ */
+export async function getWeeklySalesData() {
+  if (!supabaseAdmin) throw new Error('Database not configured');
+
+  const { data, error } = await supabaseAdmin
+    .from('orders')
+    .select('order_status, total_amount, created_at');
+
+  if (error) {
+    console.error('[OrderService] Weekly sales error:', error);
+    throw new Error('Failed to fetch weekly sales data');
+  }
+
+  const validRows = (data || []).filter(r => r.order_status !== ORDER_STATUS.CANCELLED);
+
+  const nowIST    = new Date(Date.now() + IST_OFFSET_MS);
+  const todayIST  = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), nowIST.getUTCDate()));
+  const todayIdx  = (nowIST.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+
+  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const buckets = dayLabels.map((day, w) => {
+    const daysAgo    = (todayIdx - w + 7) % 7;
+    const dateIST    = new Date(todayIST.getTime() - daysAgo * DAY_MS);
+    const start      = new Date(dateIST.getTime() - IST_OFFSET_MS); // real UTC instant
+    const end        = new Date(start.getTime() + DAY_MS);
+    return { day, sales: 0, orders: 0, start, end };
+  });
+
+  for (const row of validRows) {
+    const bucket = buckets.find(b => isBetween(row.created_at, b.start, b.end));
+    if (bucket) {
+      bucket.sales  += Number(row.total_amount) || 0;
+      bucket.orders += 1;
+    }
+  }
+
+  return buckets.map(({ day, sales, orders }) => ({ day, sales, orders }));
+}
+
+/**
+ * Admin dashboard: Top Selling Items — actual quantity sold per product,
+ * aggregated from order_items across all-time NON-cancelled orders (no
+ * separate "top selling period" exists elsewhere in the app to reuse).
+ */
+export async function getTopSellingProductsData(limit = 5) {
+  if (!supabaseAdmin) throw new Error('Database not configured');
+
+  const { data, error } = await supabaseAdmin
+    .from('order_items')
+    .select('product_id, quantity, orders!inner(order_status)');
+
+  if (error) {
+    console.error('[OrderService] Top selling products error:', error);
+    throw new Error('Failed to fetch top selling products');
+  }
+
+  const soldByProduct = {};
+  for (const item of data || []) {
+    if (!item.product_id) continue;
+    if (item.orders?.order_status === ORDER_STATUS.CANCELLED) continue;
+    soldByProduct[item.product_id] = (soldByProduct[item.product_id] || 0) + (Number(item.quantity) || 0);
+  }
+
+  const topIds = Object.entries(soldByProduct)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([id]) => id);
+
+  if (topIds.length === 0) return [];
+
+  const { data: products, error: productsError } = await supabaseAdmin
+    .from('products')
+    .select('id, name, price, image_url')
+    .in('id', topIds);
+
+  if (productsError) {
+    console.error('[OrderService] Top selling product details error:', productsError);
+    throw new Error('Failed to fetch top selling product details');
+  }
+
+  const productMap = Object.fromEntries((products || []).map(p => [p.id, p]));
+
+  return topIds.map(id => ({
+    id,
+    name:  productMap[id]?.name ?? 'Unknown product',
+    price: productMap[id]?.price ?? 0,
+    image: productMap[id]?.image_url || null,
+    sold:  soldByProduct[id],
+  }));
+}
+

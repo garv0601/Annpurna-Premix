@@ -33,6 +33,9 @@ export default function Orders() {
     detailOpen,
     openDetail,
     closeDetail,
+    changeOrderStatus,
+    statusUpdating,
+    statusMessage,
   } = useOrders();
 
   const [newOrderOpen, setNewOrderOpen] = useState(false);
@@ -120,6 +123,9 @@ export default function Orders() {
         order={selectedOrder}
         isOpen={detailOpen}
         onClose={closeDetail}
+        onStatusChange={changeOrderStatus}
+        statusUpdating={statusUpdating}
+        statusMessage={statusMessage}
       />
 
       {/* ── New Order Modal ── */}

@@ -4,7 +4,7 @@ import { useCustomers } from '../../hooks/useCustomers';
 import CustomerStats from '../../components/customers/CustomerStats';
 import CustomerFilters from '../../components/customers/CustomerFilters';
 import CustomerTable from '../../components/customers/CustomerTable';
-import CustomerDetails from '../../components/customers/CustomerDetails';
+import CustomerEditModal from '../../components/customers/CustomerEditModal';
 import './Customers.css';
 
 export default function Customers() {
@@ -19,15 +19,13 @@ export default function Customers() {
     setStatusFilter,
     dateFilter,
     setDateFilter,
-    selectedCustomer,
-    customerOrders,
-    customerAddresses,
-    ordersLoading,
-    detailOpen,
-    openDetail,
-    closeDetail,
-    handleDeactivate,
-    handleActivate,
+    editOpen,
+    editingCustomer,
+    editLoading,
+    editError,
+    openEdit,
+    closeEdit,
+    handleDeleteCustomer,
   } = useCustomers();
 
   if (loading && customers.length === 0) {
@@ -59,7 +57,7 @@ export default function Customers() {
       <div className="cust-header">
         <div className="cust-header-left">
           <h1 className="cust-title">Customers</h1>
-          <p className="cust-subtitle">Manage your Annpurna family members and view their order history.</p>
+          <p className="cust-subtitle">Manage your Maa's Kitchen family members and their profile details.</p>
         </div>
       </div>
 
@@ -79,19 +77,17 @@ export default function Customers() {
       {/* ── Customer Table ── */}
       <CustomerTable
         customers={customers}
-        onView={openDetail}
+        onEdit={openEdit}
       />
 
-      {/* ── Customer Detail Drawer ── */}
-      <CustomerDetails
-        customer={selectedCustomer}
-        orders={customerOrders}
-        addresses={customerAddresses}
-        loading={ordersLoading}
-        isOpen={detailOpen}
-        onClose={closeDetail}
-        onDeactivate={handleDeactivate}
-        onActivate={handleActivate}
+      {/* ── Customer Details Popup ── */}
+      <CustomerEditModal
+        isOpen={editOpen}
+        customer={editingCustomer}
+        loading={editLoading}
+        loadError={editError}
+        onClose={closeEdit}
+        onDelete={handleDeleteCustomer}
       />
     </motion.div>
   );

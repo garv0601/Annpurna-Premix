@@ -1,10 +1,15 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import WhatsAppButton from './WhatsAppButton/WhatsAppButton';
+import BottomNav from './BottomNav';
 import CartDrawer from '../common/CartDrawer';
 
 export const Layout = ({ children, cartProps, navbarProps }) => {
+  const { pathname } = useLocation();
+  const isCheckoutPage = pathname.startsWith('/checkout');
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header
@@ -13,7 +18,8 @@ export const Layout = ({ children, cartProps, navbarProps }) => {
       />
       <main style={{ flex: 1 }}>{children}</main>
       <Footer />
-      <WhatsAppButton />
+      <WhatsAppButton hideTooltipOnMobile={isCheckoutPage} />
+      <BottomNav />
       <CartDrawer
         isOpen={cartProps?.isCartOpen}
         onClose={cartProps?.onCloseCart}

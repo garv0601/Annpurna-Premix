@@ -72,6 +72,19 @@
   font-weight: 500;
 }
 
+/* Inline fallback shown for a single section that failed to load, so one
+   bad request doesn't blank the rest of the dashboard. */
+.dashboard-section-error {
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: var(--status-cancelled-bg, rgba(192, 57, 43, 0.1));
+  color: var(--status-cancelled, #C0392B);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
 /* ═══════════════════════════════════════════
    Responsive Breakpoints
    ═══════════════════════════════════════════ */
@@ -122,7 +135,13 @@
 /* Mobile */
 @media (max-width: 580px) {
   .dashboard-kpis {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .dashboard-kpis {
+    gap: 8px;
   }
 }

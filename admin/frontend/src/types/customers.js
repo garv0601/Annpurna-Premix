@@ -27,8 +27,8 @@
 
 /**
  * @typedef {Object} CustomerStats
- * @property {number} total_customers
- * @property {number} new_customers
- * @property {number} active_customers
- * @property {number} repeat_percentage
+ * @property {number} total_customers - Everyone who ever registered (active + deactivated + archived deleted)
+ * @property {number} new_customers - Registered within the last 7 days
+ * @property {number} active_customers - Status = 'active' (not deactivated/deleted)
+ * @property {number} repeat_customers - Customers with 2 or more orders
  */

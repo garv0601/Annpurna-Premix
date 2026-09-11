@@ -274,6 +274,29 @@ export default function OrderDetails({ onAddToCartRaw }) {
                 </div>
 
                 <div className="order-detail-header-actions">
+                  <button
+                    onClick={() => navigate(`/account/orders/${order.id}/track`)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: 'transparent',
+                      color: '#1C1007',
+                      border: '1px solid #5D4037',
+                      padding: '12px 20px',
+                      borderRadius: '24px',
+                      fontFamily: "'Be Vietnam Pro', sans-serif",
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(93, 64, 55, 0.04)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <MapPin size={16} />
+                    Track Order
+                  </button>
                   {order.status === 'delivered' && (
                     <button
                       onClick={handleReorder}
@@ -301,29 +324,6 @@ export default function OrderDetails({ onAddToCartRaw }) {
                   )}
                   {order.status === 'in-transit' && (
                     <>
-                      <button
-                        onClick={() => navigate(`/orders/${order.id}/track`)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          background: 'transparent',
-                          color: '#1C1007',
-                          border: '1px solid #5D4037',
-                          padding: '12px 20px',
-                          borderRadius: '24px',
-                          fontFamily: "'Be Vietnam Pro', sans-serif",
-                          fontSize: '14px',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(93, 64, 55, 0.04)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <MapPin size={16} />
-                        Track Order
-                      </button>
                       <button
                         onClick={handleReorder}
                         style={{

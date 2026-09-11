@@ -140,11 +140,12 @@ export async function createRazorpayOrder(amount) {
  *   order.paymentMethod, order.paymentStatus
  */
 function normaliseOrder(raw) {
-  const addr = raw.shipping_addres || {};
+  const addr = raw.shipping_address || {};
 
   return {
     id:        raw.id,
     createdAt: raw.created_at,
+    updatedAt: raw.updated_at,
     status:    raw.order_status,
     total:     raw.total_amount,
     subtotal:  raw.subtotal,

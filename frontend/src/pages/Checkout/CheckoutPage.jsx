@@ -8,6 +8,7 @@ import { getPaymentMethods } from '../../services/paymentService';
 import { placeOrder, createRazorpayOrder } from '../../services/orderService';
 import AddressForm from '../../components/addresses/AddressForm';
 import supabase from '../../lib/supabase';
+import { calculateShippingCharge, calculateOrderTotal } from '../../utils/pricing';
 import './CheckoutPage.css';
 
 const formatPrice = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
@@ -26,7 +27,7 @@ const collapsedVariants = {
   visible: { opacity: 1, height: 'auto', marginTop: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
 };
 
-export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuantity }) {
+export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuantity, clearCart, coupon }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -59,11 +60,14 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
   const step3Ref = useRef(null);
   const stepRefs = { 1: step1Ref, 2: step2Ref, 3: step3Ref };
 
-  // Cart calculations
+  // Cart calculations — same shipping rule + total formula as the Cart page,
+  // so both pages always show identical numbers for the same cart/coupon state.
   const codFee = paymentMethod === 'cod' ? 40 : 0;
-  const deliveryCost = deliveryMethod === 'express' ? 50 : 0;
-  const taxes = Math.round(subtotal * 0.05 * 100) / 100; // 5% tax
-  const total = subtotal + deliveryCost + taxes + codFee;
+  const standardDeliveryCost = calculateShippingCharge(subtotal, 'standard');
+  const deliveryCost = calculateShippingCharge(subtotal, deliveryMethod);
+  const appliedCoupon = coupon?.appliedCoupon || null;
+  const discountAmount = appliedCoupon?.discountAmount || 0;
+  const total = calculateOrderTotal({ subtotal, shipping: deliveryCost, discount: discountAmount, extraFees: codFee });
 
   // Selected address object
   const selectedAddress = addresses.find(a => a.id === selectedAddressId);
@@ -151,18 +155,25 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
     }
   };
 
+  /* ── Smooth-scroll to a step section once its open/collapse animation has
+     settled, keeping the heading clear of the sticky checkout header ── */
+  const STICKY_HEADER_OFFSET = 90;
+  const STEP_ANIMATION_MS = 480; // matches the longest step transition (0.45s enter / 0.4s collapse)
+
+  const scrollToStep = (step) => {
+    const ref = stepRefs[step];
+    if (ref?.current) {
+      const y = ref.current.getBoundingClientRect().top + window.scrollY - STICKY_HEADER_OFFSET;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   /* ── Navigate to a step (smooth scroll + state) ── */
   const goToStep = (step) => {
     if (step > highestStep) return; // Can't skip ahead
     setCurrentStep(step);
     // Smooth scroll to the target section after animation settles
-    setTimeout(() => {
-      const ref = stepRefs[step];
-      if (ref?.current) {
-        const y = ref.current.getBoundingClientRect().top + window.scrollY - 90;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-      }
-    }, 150);
+    setTimeout(() => scrollToStep(step), STEP_ANIMATION_MS);
   };
 
   const handleContinueToDelivery = () => {
@@ -176,9 +187,7 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
     setHighestStep(prev => Math.max(prev, next));
 
     // Smooth scroll to delivery section after animation settles
-    setTimeout(() => {
-      step2Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 150);
+    setTimeout(() => scrollToStep(next), STEP_ANIMATION_MS);
   };
 
   const handleContinueToPayment = () => {
@@ -197,9 +206,8 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
       }).catch(err => console.error('Error loading payment methods:', err));
     }
 
-    setTimeout(() => {
-      step3Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 150);
+    // Smooth scroll to payment section after animation settles
+    setTimeout(() => scrollToStep(next), STEP_ANIMATION_MS);
   };
 
   /* ── Razorpay Payment Handler ── */
@@ -215,6 +223,16 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
     });
+  };
+
+  // Supabase's query builder is thenable but has no .catch(); wrap in try/catch
+  // so a release failure never throws an uncaught error out of the caller.
+  const releaseReservation = async (sessionId) => {
+    try {
+      await supabase.rpc('release_checkout_reservations', { p_session_id: sessionId });
+    } catch (err) {
+      console.error('[Checkout] Failed to release reservation:', err);
+    }
   };
 
   const handlePayAndPlaceOrder = async () => {
@@ -235,11 +253,19 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
     setError(null);
 
     // 2. ATOMIC INVENTORY RESERVATION (Database validates stock)
-    const { data: reservations, error: reserveError } = await supabase.rpc('reserve_checkout_inventory', {
-      p_items,
-      p_session_id: sessionId,
-      p_customer_id: user.id
-    });
+    // Wrapped in try/catch so an unexpected/network-level throw (not just a
+    // Supabase-returned error) can't leave the UI stuck on "Processing" forever.
+    let reserveError;
+    try {
+      const result = await supabase.rpc('reserve_checkout_inventory', {
+        p_items,
+        p_session_id: sessionId,
+        p_customer_id: user.id
+      });
+      reserveError = result.error;
+    } catch (err) {
+      reserveError = err;
+    }
 
     if (reserveError) {
       console.error('[Checkout] Reservation failed:', reserveError);
@@ -262,6 +288,7 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
       shippingAddress: selectedAddress,
       sessionId,
       notes:           null,
+      couponCode:      appliedCoupon?.code || undefined,
     };
 
     // ── COD FLOW ─────────────────────────────────────────────────────────────
@@ -269,21 +296,21 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
       try {
         const result = await placeOrder(baseOrderPayload);
 
+        // Order confirmed & inventory consumed — safe to clear the cart now.
+        clearCart?.();
+        coupon?.removeCoupon();
         setIsProcessingPayment(false);
-        navigate('/order-success', {
+        navigate(`/order-success/${result.order.id}`, {
           state: {
-            orderId:       result.order.orderId,
-            total:         result.order.total,
             paymentMethod: 'cod',
             deliveryMethod,
-            address:       selectedAddress,
           }
         });
       } catch (err) {
         console.error('[Checkout] COD order failed:', err);
         setError(err.message || 'Order placement failed. Please try again.');
         // Release reservation on failure
-        await supabase.rpc('release_checkout_reservations', { p_session_id: sessionId }).catch(() => {});
+        await releaseReservation(sessionId);
         setIsProcessingPayment(false);
       }
       return;
@@ -293,7 +320,7 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
     const scriptLoaded = await loadRazorpayScript();
     if (!scriptLoaded) {
       setError('Failed to load payment gateway. Please check your internet connection.');
-      await supabase.rpc('release_checkout_reservations', { p_session_id: sessionId }).catch(() => {});
+      await releaseReservation(sessionId);
       setIsProcessingPayment(false);
       return;
     }
@@ -306,7 +333,7 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
     } catch (err) {
       console.error('[Checkout] Razorpay order creation failed:', err);
       setError(err.message || 'Could not initiate payment. Please try again.');
-      await supabase.rpc('release_checkout_reservations', { p_session_id: sessionId }).catch(() => {});
+      await releaseReservation(sessionId);
       setIsProcessingPayment(false);
       return;
     }
@@ -333,7 +360,7 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
       modal: {
         ondismiss: async () => {
           console.log('[Checkout] Razorpay modal closed — releasing reservation...');
-          await supabase.rpc('release_checkout_reservations', { p_session_id: sessionId }).catch(() => {});
+          await releaseReservation(sessionId);
           setIsProcessingPayment(false);
         },
       },
@@ -349,22 +376,22 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
             razorpaySignature: response.razorpay_signature,
           });
 
+          // Payment verified & order confirmed — safe to clear the cart now.
+          clearCart?.();
+          coupon?.removeCoupon();
           setIsProcessingPayment(false);
-          navigate('/order-success', {
+          navigate(`/order-success/${result.order.id}`, {
             state: {
-              orderId:           result.order.orderId,
-              total:             result.order.total,
               paymentMethod,
               deliveryMethod,
-              address:           selectedAddress,
-              razorpayPaymentId: response.razorpay_payment_id,
             }
           });
         } catch (err) {
           console.error('[Checkout] Order confirmation failed after payment:', err);
           setError(
-            'Payment was received but order confirmation failed. ' +
-            'Please contact support with payment ID: ' + response.razorpay_payment_id
+            "Payment received, but we couldn't complete your order confirmation. " +
+            "Please don't make another payment — we're checking your order. " +
+            'Reference: ' + response.razorpay_payment_id
           );
           setIsProcessingPayment(false);
         }
@@ -384,21 +411,20 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
           razorpayPaymentId: mockPaymentId,
         });
 
+        // Order confirmed (mock gateway) — safe to clear the cart now.
+        clearCart?.();
+        coupon?.removeCoupon();
         setIsProcessingPayment(false);
-        navigate('/order-success', {
+        navigate(`/order-success/${result.order.id}`, {
           state: {
-            orderId:           result.order.orderId,
-            total:             result.order.total,
             paymentMethod,
             deliveryMethod,
-            address:           selectedAddress,
-            razorpayPaymentId: mockPaymentId,
           }
         });
       } catch (err) {
         console.error('[Checkout] Mock order failed:', err);
         setError(err.message || 'Order placement failed. Please try again.');
-        await supabase.rpc('release_checkout_reservations', { p_session_id: sessionId }).catch(() => {});
+        await releaseReservation(sessionId);
         setIsProcessingPayment(false);
       }
       return;
@@ -410,7 +436,7 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
     } catch (err) {
       console.error('[Checkout] Razorpay error:', err);
       setError('Payment could not be initiated. Please try again.');
-      await supabase.rpc('release_checkout_reservations', { p_session_id: sessionId }).catch(() => {});
+      await releaseReservation(sessionId);
       setIsProcessingPayment(false);
     }
   };
@@ -644,7 +670,9 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
                         <span className="delivery-option-name">Standard Delivery</span>
                         <span className="delivery-option-eta">Estimated arrival: 3–5 business days</span>
                       </div>
-                      <span className="delivery-option-price free">Free</span>
+                      <span className={`delivery-option-price ${standardDeliveryCost === 0 ? 'free' : ''}`}>
+                        {standardDeliveryCost === 0 ? 'Free' : formatPrice(standardDeliveryCost)}
+                      </span>
                     </label>
 
                     {/* Express Delivery */}
@@ -711,8 +739,8 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
                       </div>
                       <div className="collapsed-address-detail">
                         {deliveryMethod === 'standard'
-                          ? 'Estimated arrival: 3–5 business days · Free'
-                          : 'Estimated arrival: 1–2 business days · ₹50'}
+                          ? `Estimated arrival: 3–5 business days · ${standardDeliveryCost === 0 ? 'Free' : formatPrice(standardDeliveryCost)}`
+                          : `Estimated arrival: 1–2 business days · ${formatPrice(deliveryCost)}`}
                       </div>
                     </div>
                   </div>
@@ -942,23 +970,23 @@ export default function CheckoutPage({ cartItems = [], subtotal = 0, updateQuant
                 <span>Subtotal</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
-              <div className="summary-row">
-                <span>Delivery {currentStep >= 2 ? `(${deliveryMethod === 'standard' ? 'Standard' : 'Express'})` : ''}</span>
-                <span className={deliveryCost === 0 ? 'delivery-free-text' : ''}>
-                  {deliveryCost === 0 ? 'Free' : formatPrice(deliveryCost)}
-                </span>
-              </div>
-              {currentStep >= 2 && (
+              {discountAmount > 0 && (
                 <motion.div
                   className="summary-row"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   transition={{ duration: 0.3 }}
                 >
-                  <span>Taxes</span>
-                  <span>{formatPrice(taxes)}</span>
+                  <span>Discount {appliedCoupon ? `(${appliedCoupon.code})` : ''}</span>
+                  <span>-{formatPrice(discountAmount)}</span>
                 </motion.div>
               )}
+              <div className="summary-row">
+                <span>Delivery {currentStep >= 2 ? `(${deliveryMethod === 'standard' ? 'Standard' : 'Express'})` : ''}</span>
+                <span className={deliveryCost === 0 ? 'delivery-free-text' : ''}>
+                  {deliveryCost === 0 ? 'Free' : formatPrice(deliveryCost)}
+                </span>
+              </div>
               {codFee > 0 && (
                 <motion.div
                   className="summary-row"

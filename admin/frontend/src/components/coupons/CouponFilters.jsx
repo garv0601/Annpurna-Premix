@@ -6,8 +6,9 @@ import '../customers/CustomerFilters.css'; // Reusing CSS
 const STATUS_OPTIONS = [
   { value: '', label: 'All Status' },
   { value: 'active', label: 'Active' },
-  { value: 'expired', label: 'Expired' },
   { value: 'scheduled', label: 'Scheduled' },
+  { value: 'expired', label: 'Expired' },
+  { value: 'inactive', label: 'Inactive' },
 ];
 
 const TYPE_OPTIONS = [
